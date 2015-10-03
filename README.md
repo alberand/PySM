@@ -10,4 +10,5 @@ Run:
     python ./main.py
 
 Screenshot:
+
 ![Alt text](https://github.com/alberand/PySM/blob/master/stuff/screenshot.png?raw=true "PySM screenshot.")
