@@ -21,10 +21,18 @@ from queue              import Queue
 
 class View(QWidget):
 
+    # Send data to port
     send_data           = pyqtSignal(object)
+    # Chage baudrate
     baudrate_changed    = pyqtSignal(object)
+    # Change end of line
     eol_changed         = pyqtSignal(object)
+    # Change port
     port_changed        = pyqtSignal(object)
+    # Pause model
+    pause_m             = pyqtSignal(object)
+    # Continue model
+    start_m             = pyqtSignal(object)
 
     def __init__(self):
         QWidget.__init__(self)
@@ -51,6 +59,14 @@ class View(QWidget):
 
         cmd_btn = QPushButton('Send')
         cmd_btn.clicked.connect(self.emit_send_data)
+        cmd_hbox.addWidget(cmd_btn)
+
+        cmd_btn = QPushButton('Start')
+        cmd_btn.clicked.connect(self.start_m.emit)
+        cmd_hbox.addWidget(cmd_btn)
+
+        cmd_btn = QPushButton('Stop')
+        cmd_btn.clicked.connect(self.pause_m.emit)
         cmd_hbox.addWidget(cmd_btn)
 
         vbox.addLayout(cmd_hbox)
@@ -91,7 +107,7 @@ class View(QWidget):
         self.br_menu.addItem('57600 baud')
         self.br_menu.addItem('115200 baud')
         self.br_menu.addItem('230400 baud')
-        self.br_menu.addItem('250000 baud')
+        self.br_menu.addItem('460800 baud')
         self.br_menu.currentIndexChanged.connect(self.emit_br_changed)
         # Set default baudrate 9600
         self.br_menu.setCurrentIndex(4)
@@ -167,7 +183,6 @@ class View(QWidget):
         sb = self.editer.verticalScrollBar()
         sb.setValue(sb.maximum())
 
-
     def changePort(self):
         if not self.msg_sent:
             self.msg_sent = True
@@ -192,4 +207,5 @@ class View(QWidget):
         self.eol_changed.emit(value)
 
     def emit_port_changed(self):
+        self.port_edit.clearFocus()
         self.port_changed.emit(self.port_edit.text())

@@ -20,6 +20,8 @@ class Presenter:
         self.__view.baudrate_changed.connect(self.__model.set_br)
         self.__view.eol_changed.connect(self.__model.set_eol)
         self.__view.port_changed.connect(self.__model.set_port)
+        self.__view.pause_m.connect(self.__model.pause)
+        self.__view.start_m.connect(self.start_model)
 
         self.__model.error.connect(self.__view.show_error)
 
@@ -28,5 +30,15 @@ class Presenter:
         self.__view.set_port(self.__model.get_port())
         self.__view.update_gui()
 
+    def start_model(self):
+        '''
+        Initalizate serial settings in model and start thread.
+        '''
+        if not self.__model.paused.is_set():
+            self.__model.resume()
+
     def end_cmd(self):
+        '''
+        Stop model thread.
+        '''
         self.__model.stop()
