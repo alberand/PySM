@@ -15,6 +15,7 @@ from PyQt5.QtWidgets    import QMessageBox
 from PyQt5.QtCore       import QTimer
 from PyQt5.QtCore       import QObject
 from PyQt5.QtCore       import pyqtSignal
+from PyQt5.QtGui        import QTextCursor
 
 from queue              import Queue
 
@@ -39,7 +40,7 @@ class View(QWidget):
 
         self.queue      = None
         self.end_cmd    = None
-        self.autoscroll = True
+        self.autoscroll = False
         self.msg_sent   = False
 
         self.timer = QTimer()
@@ -73,6 +74,7 @@ class View(QWidget):
 
         # Text edit area
         self.editer = QPlainTextEdit()
+        self.editer.scrollContentsBy = self.ModScrollContentsBy
         vbox.addWidget(self.editer)
 
         # Settings area
@@ -82,6 +84,10 @@ class View(QWidget):
         chk_btn = QCheckBox('Autoscroll')
         chk_btn.stateChanged.connect(self.set_autoscroll)
         stng_hbox.addWidget(chk_btn)
+
+        cmd_btn = QPushButton('Clear')
+        cmd_btn.clicked.connect(self.editer.clear)
+        stng_hbox.addWidget(cmd_btn)
 
         stng_hbox.addStretch(1)
 
@@ -145,6 +151,7 @@ class View(QWidget):
         self.end_cmd = end_cmd
 
     def set_autoscroll(self, value):
+        print('Set autoscroll: {}.'.format(value))
         self.autoscroll = value
 
     def set_port(self, value):
@@ -182,6 +189,7 @@ class View(QWidget):
     def scroll_down(self):
         sb = self.editer.verticalScrollBar()
         sb.setValue(sb.maximum())
+        self.editer.moveCursor(QTextCursor.End)
 
     def changePort(self):
         if not self.msg_sent:
@@ -209,3 +217,12 @@ class View(QWidget):
     def emit_port_changed(self):
         self.port_edit.clearFocus()
         self.port_changed.emit(self.port_edit.text())
+
+#==============================================================================
+# Events
+#==============================================================================
+    def ModScrollContentsBy(self, dx, dy):
+        if self.autoscroll:
+            self.editer.ensureCursorVisible()
+        else:
+            QPlainTextEdit.scrollContentsBy(self.editer, dx, dy)
