@@ -1,0 +1,2 @@
+ - Add text decoding. For example: I want to see data in UTF-8, ASCII and Bytes
+   formats.
