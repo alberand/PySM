@@ -71,11 +71,13 @@ class Model(threading.Thread, QObject):
 
     def pause(self):
         self.ser.close()
-        self.paused.clear()
+        if self.paused.isSet():
+            self.paused.clear()
 
     def resume(self):
         self.ser.open()
-        self.paused.set()
+        if not self.paused.isSet():
+            self.paused.set()
 
     def stop(self):
         '''
@@ -107,6 +109,9 @@ class Model(threading.Thread, QObject):
         return self.queue
 
     def set_port(self, port):
+        if self.ser and self.ser.isOpen():
+            self.ser.close()
+
         if self.port != port:
             self.port = port
         else:
@@ -115,7 +120,7 @@ class Model(threading.Thread, QObject):
         # self.begin()
         try:
             self.ser.port = port
-            self.ser.open()
+            self.resume()
         except SerialException as e:
             self.emit_error('Can\'t open this port: ' + str(port) + '.')
             print(e)
