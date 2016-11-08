@@ -99,7 +99,7 @@ class Model(threading.Thread, QObject):
         except SerialException:
             print('Fail to open default port.')
             self.ser = serial.Serial(
-                    baudrate=self.br, timeout=self.tiemout)
+                    baudrate=self.br, timeout=self.timeout)
 
 #==============================================================================
 # Get, Set
@@ -224,3 +224,4 @@ class Model(threading.Thread, QObject):
 
     def emit_error(self, value):
         self.error.emit(value)
+
