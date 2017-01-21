@@ -10,10 +10,9 @@ Requirements:
 - PySerial 
 
 ### Run:
-    ~python ./main.py~
-Or if you have python 2 by default, use this command:
-    ~python3 ./main.py~
-
+```
+python3 ./main.py
+```
 
 ### Screenshot:
 
