@@ -9,17 +9,22 @@ Requirements:
 - PyQt5 (Remember that you also need to install Qt5)
 - PySerial 
 
-Run:
+### Run:
     ~python ./main.py~
 Or if you have python 2 by default, use this command:
     ~python3 ./main.py~
 
 
-Screenshot:
+### Screenshot:
 
 ![Alt text](https://github.com/alberand/PySM/blob/master/stuff/screenshot.png?raw=true "PySM screenshot.")
 
+### TODO
+ - Add text decoding. For example: I want to see data in UTF-8, ASCII and Bytes
+   formats.
+
 References:
+===============================================================================
 - [PySerial installation guide](http://pyserial.readthedocs.io/en/latest/pyserial.html)
 - [PyQt 5 installation guide](http://pyqt.sourceforge.net/Docs/PyQt5/installation.html)
 - [Qt 5 installation guide](https://wiki.qt.io/Install_Qt_5_on_Ubuntu)
