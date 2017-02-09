@@ -62,7 +62,13 @@ class Model(threading.Thread, QObject):
                     continue
 
                 if data:
-                    self.queue.put(data.strip())
+                    if config['in_hex']:
+                        # Only for Python 3.5 and newer
+                        to_send = data.hex().upper()
+                    else:
+                        to_send = data
+
+                    self.queue.put(to_send)
 
         except KeyboardInterrupt:
             if self.ser:

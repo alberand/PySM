@@ -14,5 +14,7 @@ config = {
             '\n',
             '\r',
             '\r\n'
-        ]
+        ],
+        # Data encoding (hex, none)
+        'in_hex': True
 }
