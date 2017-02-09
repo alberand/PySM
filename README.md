@@ -21,6 +21,10 @@ python3 ./main.py
 ### TODO
  - Add text decoding. For example: I want to see data in UTF-8, ASCII and Bytes
    formats.
+ - Add to screen for HEX representation and ASCII
+ - Possibly, color-scheme will be useful. For example, specific HEX codes are
+   highlighted by predefined colors. 
+    - Editor area for quick addition rules to color-scheme
 
 References:
 ===============================================================================
