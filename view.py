@@ -151,7 +151,6 @@ class View(QWidget):
         self.end_cmd = end_cmd
 
     def set_autoscroll(self, value):
-        print('Set autoscroll: {}.'.format(value))
         self.autoscroll = value
 
     def set_port(self, value):
@@ -172,14 +171,20 @@ class View(QWidget):
         self.process_incoming()
         self.update()
 
+    def appendText(self, text):
+        self.editer.moveCursor(QTextCursor.End)
+        self.editer.insertPlainText(text)
+        self.editer.moveCursor(QTextCursor.End)
+
     def process_incoming(self):
         while self.queue.qsize():
             try:
                 msg = self.queue.get(0)
                 # Check contents of message and do what it says
                 # As a test, we simply print it
-                print(str(msg))
-                self.editer.appendPlainText(str(msg))
+                # print(bytes(msg, 'ASCII'), end='')
+                # self.editer.appendPlainText(msg)
+                self.appendText(msg)
                 if self.autoscroll:
                     self.editer.ensureCursorVisible()
                     self.scroll_down()

@@ -18,5 +18,5 @@ config = {
         # Data encoding (hex, none)
         'in_hex': False,
         # Decoding 'ASCII' or 'UTF-8'
-        'encode': 'UTF-8'
+        'encode': 'ASCII'
 }
