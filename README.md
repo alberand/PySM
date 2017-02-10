@@ -25,6 +25,7 @@ python3 ./main.py
  - Possibly, color-scheme will be useful. For example, specific HEX codes are
    highlighted by predefined colors. 
     - Editor area for quick addition rules to color-scheme
+ - Implements correct policy of interpreting special symbols in editor form.
 
 References:
 ===============================================================================
