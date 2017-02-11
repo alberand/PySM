@@ -72,10 +72,20 @@ class View(QWidget):
 
         vbox.addLayout(cmd_hbox)
 
+        # Editors pair box
+        editor_hbox = QHBoxLayout()
+
         # Text edit area
         self.editer = QPlainTextEdit()
         self.editer.scrollContentsBy = self.ModScrollContentsBy
-        vbox.addWidget(self.editer)
+        editor_hbox.addWidget(self.editer)
+
+        # HEX edit area
+        self.editor_hex = QPlainTextEdit()
+        self.editor_hex.scrollContentsBy = self.ModScrollContentsBy
+        editor_hbox.addWidget(self.editor_hex)
+
+        vbox.addLayout(editor_hbox)
 
         # Settings area
         stng_hbox = QHBoxLayout()
@@ -175,6 +185,10 @@ class View(QWidget):
         self.editer.moveCursor(QTextCursor.End)
         self.editer.insertPlainText(text)
         self.editer.moveCursor(QTextCursor.End)
+
+        self.editor_hex.moveCursor(QTextCursor.End)
+        self.editor_hex.insertPlainText(bytes(text, 'ASCII').hex())
+        self.editor_hex.moveCursor(QTextCursor.End)
 
     def process_incoming(self):
         while self.queue.qsize():
