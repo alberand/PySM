@@ -12,6 +12,7 @@ from PyQt5.QtWidgets    import QVBoxLayout
 from PyQt5.QtWidgets    import QHBoxLayout
 from PyQt5.QtWidgets    import QComboBox
 from PyQt5.QtWidgets    import QMessageBox
+from PyQt5.QtCore       import QPoint
 from PyQt5.QtCore       import QTimer
 from PyQt5.QtCore       import QObject
 from PyQt5.QtCore       import pyqtSignal
@@ -97,6 +98,7 @@ class View(QWidget):
 
         cmd_btn = QPushButton('Clear')
         cmd_btn.clicked.connect(self.editer.clear)
+        cmd_btn.clicked.connect(self.editor_hex.clear)
         stng_hbox.addWidget(cmd_btn)
 
         stng_hbox.addStretch(1)
@@ -182,13 +184,13 @@ class View(QWidget):
         self.update()
 
     def appendText(self, text):
-        self.editer.moveCursor(QTextCursor.End)
-        self.editer.insertPlainText(text)
-        self.editer.moveCursor(QTextCursor.End)
+        # pos = QPoint(self.editer.textCursor().position(), 0)
+        # self.editer.moveCursor(QTextCursor.End)
+        # self.editer.insertPlainText(text)
+        self.editer.appendPlainText(text)
+        # self.editer.cursorForPosition(pos)
 
-        self.editor_hex.moveCursor(QTextCursor.End)
-        self.editor_hex.insertPlainText(bytes(text, 'ASCII').hex())
-        self.editor_hex.moveCursor(QTextCursor.End)
+        self.editor_hex.appendPlainText(bytes(text, 'ASCII').hex())
 
     def process_incoming(self):
         while self.queue.qsize():
@@ -201,14 +203,16 @@ class View(QWidget):
                 self.appendText(msg)
                 if self.autoscroll:
                     self.editer.ensureCursorVisible()
+                    self.editor_hex.ensureCursorVisible()
                     self.scroll_down()
             except Queue.empty:
                 pass
 
     def scroll_down(self):
-        sb = self.editer.verticalScrollBar()
-        sb.setValue(sb.maximum())
-        self.editer.moveCursor(QTextCursor.End)
+        for editor in [self.editer, self.editor_hex]:
+            sb = editor.verticalScrollBar()
+            sb.setValue(sb.maximum())
+            editor.moveCursor(QTextCursor.End)
 
     def changePort(self):
         if not self.msg_sent:
@@ -241,7 +245,9 @@ class View(QWidget):
 # Events
 #==============================================================================
     def ModScrollContentsBy(self, dx, dy):
-        if self.autoscroll:
-            self.editer.ensureCursorVisible()
-        else:
-            QPlainTextEdit.scrollContentsBy(self.editer, dx, dy)
+        # print('as: {}. dx: {}. dy: {}.'.format(self.autoscroll, dx, dy))
+        for editor in [self.editer, self.editor_hex]:
+            if self.autoscroll:
+                editor.ensureCursorVisible()
+            else:
+                QPlainTextEdit.scrollContentsBy(editor, dx, dy)
