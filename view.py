@@ -12,6 +12,7 @@ from PyQt5.QtWidgets    import QVBoxLayout
 from PyQt5.QtWidgets    import QHBoxLayout
 from PyQt5.QtWidgets    import QComboBox
 from PyQt5.QtWidgets    import QMessageBox
+from PyQt5.QtWidgets    import QStatusBar
 from PyQt5.QtCore       import QPoint
 from PyQt5.QtCore       import QTimer
 from PyQt5.QtCore       import QObject
@@ -134,6 +135,7 @@ class View(QWidget):
 
         vbox.addLayout(stng_hbox)
 
+        # Port editing form
         port_hbox = QHBoxLayout()
         port_lbl = QLabel('Port: ')
         port_hbox.addWidget(port_lbl)
@@ -144,6 +146,14 @@ class View(QWidget):
         port_hbox.addWidget(self.port_edit)
 
         vbox.addLayout(port_hbox)
+
+        # Status Bar
+        self.status_bar = QStatusBar()
+
+        # self.status_label = QLabel()
+        # status_bar.addWidget(self.status_label)
+        # self.status_bar.showMessage("8-N-1", 0)
+        vbox.addWidget(self.status_bar)
 
         self.setLayout(vbox)
 
@@ -174,10 +184,18 @@ class View(QWidget):
     def set_eol(self, value):
         self.eol_menu.setCurrentIndex(value)
 
-    def closeEvent(self, event):
-        self.end_cmd()
-        QWidget.closeEvent(self, event)
-        print('exit')
+    def update_status_bar(self, data_set):
+        '''
+        Update GUI status bar.
+        Args:
+            data_set: Dictionary with port configurations: port, baudrate,
+            number of bits, parity, number of stop bits.
+        '''
+        string = '{} {}-{}-{}'.format(data_set['baudrate'],
+                data_set['num_of_bits'], data_set['parity'],
+                data_set['num_of_stop'])
+
+        self.status_bar.showMessage(string, 0)
 
     def update_gui(self):
         self.process_incoming()
@@ -251,3 +269,9 @@ class View(QWidget):
                 editor.ensureCursorVisible()
             else:
                 QPlainTextEdit.scrollContentsBy(editor, dx, dy)
+
+    def closeEvent(self, event):
+        self.end_cmd()
+        QWidget.closeEvent(self, event)
+        print('exit')
+
