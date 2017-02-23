@@ -26,6 +26,9 @@ python3 ./main.py
    highlighted by predefined colors. 
     - Editor area for quick addition rules to color-scheme
  - Implements correct policy of interpreting special symbols in editor form.
+ - Connection parameters (115200 8-N-1)
+ - Possibly available hardware ports (RTS, DTR)
+ - Save communication session
 
 References:
 ===============================================================================
