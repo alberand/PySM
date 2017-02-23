@@ -21,6 +21,8 @@ class Model(threading.Thread, QObject):
 
     # This signal emitted when program fail to read serial port (self.port)
     error = pyqtSignal(object)
+    # Signal emitted when port configuratin changes
+    port_conf_change = pyqtSignal(object)
 
     def __init__(self):
         threading.Thread.__init__(self)
@@ -32,7 +34,8 @@ class Model(threading.Thread, QObject):
 
         # Communications settings
         self.port       = config['port']
-        self.br         = config['baudrate']
+        self._br         = config['baudrate']
+        self.parity     = config['parity'][0]
         self.timeout    = config['timeout']
         # Line ending id
         self.eol        = config['eol'][0]
@@ -109,16 +112,29 @@ class Model(threading.Thread, QObject):
         '''
         try:
             self.ser = serial.Serial(
-                    self.port, self.br, timeout=self.timeout
+                    self.port, self._br, timeout=self.timeout
             )
         except SerialException:
             print('Fail to open default port.')
             self.ser = serial.Serial(
-                    baudrate=self.br, timeout=self.timeout)
+                    baudrate=self._br, timeout=self.timeout)
 
 #==============================================================================
-# Get, Set
+# Attributes
 #==============================================================================
+
+    @property
+    def br(self):
+        return self._br
+
+    @br.setter
+    def br(self, baudrate):
+        self.ser.reset_input_buffer()
+        if int(baudrate) in serial.Serial.BAUDRATES:
+            self._br = baudrate
+            self.ser.baudrate = baudrate
+
+        self.emit_port_conf_change(self.port_config())
 
     def get_queue(self):
         return self.queue
@@ -143,15 +159,6 @@ class Model(threading.Thread, QObject):
 
     def get_port(self):
         return self.port
-
-    def set_br(self, baudrate):
-        self.ser.reset_input_buffer()
-        if int(baudrate) in serial.Serial.BAUDRATES:
-            self.br = baudrate
-            self.ser.baudrate = baudrate
-
-    def get_br(self):
-        return self.br
 
     def set_eol(self, index):
         if index < len(config['eol']) and index >= 0:
@@ -234,9 +241,25 @@ class Model(threading.Thread, QObject):
             print(e)
 
 #==============================================================================
+# Utils
+#==============================================================================
+
+    def port_config(self):
+        '''
+        Generate port configuration dictinoary. (Used in view)
+        Returns:
+            Dictionary.
+        '''
+        return {'baudrate': self._br, 'num_of_bits': 8, 'parity': self.parity,
+                'num_of_stop': 1}
+
+#==============================================================================
 # Signals
 #==============================================================================
 
     def emit_error(self, value):
         self.error.emit(value)
+
+    def emit_port_conf_change(self, value):
+        self.port_conf_change.emit(value)
 

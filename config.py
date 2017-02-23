@@ -18,5 +18,13 @@ config = {
         # Data encoding (hex, none)
         'in_hex': False,
         # Decoding 'ASCII' or 'UTF-8'
-        'encode': 'ASCII'
+        'encode': 'ASCII',
+        # Parity
+        'parity':[
+            'N', # None
+            'O', # Odd
+            'E', # Even
+            'M', # Mark
+            'S'  # Space
+        ]
 }
