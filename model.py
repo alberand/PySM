@@ -33,9 +33,9 @@ class Model(threading.Thread, QObject):
         self.paused.set()
 
         # Communications settings
-        self.port       = config['port']
-        self._br         = config['baudrate']
-        self.parity     = config['parity'][0]
+        self._port       = config['port']
+        self._br        = config['baudrate']
+        self._parity     = config['parity'][0]
         self.timeout    = config['timeout']
         # Line ending id
         self.eol        = config['eol'][0]
@@ -112,7 +112,7 @@ class Model(threading.Thread, QObject):
         '''
         try:
             self.ser = serial.Serial(
-                    self.port, self._br, timeout=self.timeout
+                    self._port, self._br, timeout=self.timeout
             )
         except SerialException:
             print('Fail to open default port.')
@@ -136,19 +136,20 @@ class Model(threading.Thread, QObject):
 
         self.emit_port_conf_change(self.port_config())
 
-    def get_queue(self):
-        return self.queue
+    @property
+    def port(self):
+        return self._port
 
-    def set_port(self, port):
+    @port.setter
+    def port(self, port):
         if self.ser and self.ser.isOpen():
             self.ser.close()
 
-        if self.port != port:
-            self.port = port
+        if self._port != port:
+            self._port = port
         else:
             return
 
-        # self.begin()
         try:
             self.ser.port = port
             self.resume()
@@ -157,8 +158,10 @@ class Model(threading.Thread, QObject):
             print(e)
             self.ser.close()
 
-    def get_port(self):
-        return self.port
+        self.emit_port_conf_change(self.port_config())
+
+    def get_queue(self):
+        return self.queue
 
     def set_eol(self, index):
         if index < len(config['eol']) and index >= 0:
@@ -250,7 +253,7 @@ class Model(threading.Thread, QObject):
         Returns:
             Dictionary.
         '''
-        return {'baudrate': self._br, 'num_of_bits': 8, 'parity': self.parity,
+        return {'baudrate': self._br, 'num_of_bits': 8, 'parity': self._parity,
                 'num_of_stop': 1}
 
 #==============================================================================
