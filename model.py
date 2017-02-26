@@ -33,9 +33,11 @@ class Model(threading.Thread, QObject):
         self.paused.set()
 
         # Communications settings
-        self._port       = config['port']
+        self._port      = config['port']
         self._br        = config['baudrate']
-        self._parity     = config['parity'][0]
+        self._parity    = config['parity']
+        self._bytesize  = config['bytesize']
+        self._stopbits  = config['stopbits']
         self.timeout    = config['timeout']
         # Line ending id
         self.eol        = config['eol'][0]
@@ -112,7 +114,8 @@ class Model(threading.Thread, QObject):
         '''
         try:
             self.ser = serial.Serial(
-                    self._port, self._br, timeout=self.timeout
+                    port=self._port, baudrate=self._br, timeout=self.timeout,
+                    bytesize=self._bytesize, stopbits=self._stopbits
             )
         except SerialException:
             print('Fail to open default port.')
@@ -253,8 +256,8 @@ class Model(threading.Thread, QObject):
         Returns:
             Dictionary.
         '''
-        return {'baudrate': self._br, 'num_of_bits': 8, 'parity': self._parity,
-                'num_of_stop': 1}
+        return {'baudrate': self._br, 'num_of_bits': self._bytesize, 
+                'parity': self._parity, 'num_of_stop': self._stopbits}
 
 #==============================================================================
 # Signals

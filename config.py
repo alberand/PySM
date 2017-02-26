@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # coding=utf-8
 
+import serial as s
+
 config = {
         # Default port
         'port': '/dev/ttyUSB0',
@@ -19,12 +21,12 @@ config = {
         'in_hex': False,
         # Decoding 'ASCII' or 'UTF-8'
         'encode': 'ASCII',
-        # Parity
-        'parity':[
-            'N', # None
-            'O', # Odd
-            'E', # Even
-            'M', # Mark
-            'S'  # Space
-        ]
+        # Parity (PARITY_NONE, PARITY_EVEN, PARITY_ODD PARITY_MARK, 
+        # PARITY_SPACE)
+        'parity': s.PARITY_NONE,
+        # Bytesize (FIVEBITS, SIXBITS, SEVENBITS, EIGHTBITS)
+        'bytesize': s.EIGHTBITS,
+        # Number of stop bits (STOPBITS_ONE, STOPBITS_ONE_POINT_FIVE, 
+        # STOPBITS_TWO)
+        'stopbits': s.STOPBITS_ONE
 }
