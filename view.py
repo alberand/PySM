@@ -18,6 +18,7 @@ from PyQt5.QtCore       import QTimer
 from PyQt5.QtCore       import QObject
 from PyQt5.QtCore       import pyqtSignal
 from PyQt5.QtGui        import QTextCursor
+from PyQt5.QtCore       import Qt
 
 from queue              import Queue
 
@@ -150,9 +151,10 @@ class View(QWidget):
         # Status Bar
         self.status_bar = QStatusBar()
 
-        # self.status_label = QLabel()
-        # status_bar.addWidget(self.status_label)
-        # self.status_bar.showMessage("8-N-1", 0)
+        self.status_label = QLabel()
+        self.status_label.setAlignment(Qt.AlignRight)
+
+        self.status_bar.addWidget(self.status_label, 1)
         vbox.addWidget(self.status_bar)
 
         self.setLayout(vbox)
@@ -195,7 +197,7 @@ class View(QWidget):
                 data_set['num_of_bits'], data_set['parity'],
                 data_set['num_of_stop'])
 
-        self.status_bar.showMessage(string, 0)
+        self.status_label.setText(string)
 
     def update_gui(self):
         self.process_incoming()
