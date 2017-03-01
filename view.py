@@ -13,6 +13,7 @@ from PyQt5.QtWidgets    import QHBoxLayout
 from PyQt5.QtWidgets    import QComboBox
 from PyQt5.QtWidgets    import QMessageBox
 from PyQt5.QtWidgets    import QStatusBar
+from PyQt5.QtWidgets    import QMenuBar
 from PyQt5.QtCore       import QPoint
 from PyQt5.QtCore       import QTimer
 from PyQt5.QtCore       import QObject
@@ -54,6 +55,12 @@ class View(QWidget):
 
     def __initUI(self):
         vbox = QVBoxLayout(self)
+
+        # Add window's menu bar
+        self.menubar = QMenuBar()
+        file_menu = self.menubar.addMenu('File')
+        file_menu.addAction('Save', self.save_to_file)
+        vbox.addWidget(self.menubar)
 
         # Command box
         cmd_hbox = QHBoxLayout()
@@ -241,6 +248,12 @@ class View(QWidget):
         else:
             self.msg_sent = False
             return None
+#==============================================================================
+# Utils
+#==============================================================================
+
+    def save_to_file(self):
+        pass
 
 #==============================================================================
 # Signals
