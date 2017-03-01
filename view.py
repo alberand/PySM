@@ -55,6 +55,8 @@ class View(QWidget):
 
     def __initUI(self):
         vbox = QVBoxLayout(self)
+        # vbox.setSpacing(0)
+        vbox.setContentsMargins(3, 3, 3, 3)
 
         # Add window's menu bar
         self.menubar = QMenuBar()
