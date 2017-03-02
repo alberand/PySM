@@ -14,6 +14,7 @@ from PyQt5.QtWidgets    import QComboBox
 from PyQt5.QtWidgets    import QMessageBox
 from PyQt5.QtWidgets    import QStatusBar
 from PyQt5.QtWidgets    import QMenuBar
+from PyQt5.QtWidgets    import QFileDialog
 from PyQt5.QtCore       import QPoint
 from PyQt5.QtCore       import QTimer
 from PyQt5.QtCore       import QObject
@@ -255,7 +256,10 @@ class View(QWidget):
 #==============================================================================
 
     def save_to_file(self):
-        pass
+        _file = QFileDialog.getSaveFileName()
+        if _file[0]:
+            with open(_file[0], 'w+') as fn:
+                fn.write(self.editer.toPlainText())
 
 #==============================================================================
 # Signals
