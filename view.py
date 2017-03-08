@@ -213,14 +213,14 @@ class View(QWidget):
         self.process_incoming()
         self.update()
 
-    def appendText(self, text):
+    def appendText(self, data):
         # pos = QPoint(self.editer.textCursor().position(), 0)
         # self.editer.moveCursor(QTextCursor.End)
         # self.editer.insertPlainText(text)
-        self.editer.appendPlainText(text)
+        self.editer.appendPlainText(data[0])
         # self.editer.cursorForPosition(pos)
 
-        self.editor_hex.appendPlainText(bytes(text, 'ASCII').hex())
+        self.editor_hex.appendHtml(data[1])
 
     def process_incoming(self):
         while self.queue.qsize():

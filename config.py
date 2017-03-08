@@ -28,5 +28,7 @@ config = {
         'bytesize': s.EIGHTBITS,
         # Number of stop bits (STOPBITS_ONE, STOPBITS_ONE_POINT_FIVE, 
         # STOPBITS_TWO)
-        'stopbits': s.STOPBITS_ONE
+        'stopbits': s.STOPBITS_ONE,
+        # HEX console coloring
+        'hex_colors': True
 }

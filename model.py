@@ -74,15 +74,19 @@ class Model(threading.Thread, QObject):
                     else:
                         if config['encode'].upper() in ['ASCII', 'UTF-8']:
                             try:
-                                to_send = data.decode(config['encode'])
+                                decoded = data.decode(config['encode'])
                             except UnicodeError as e:
                                 print('Fail to decode bytes. Error: {}'.format(
                                     e))
                         else:
                             print('Wrong decoding format. Using ASCII.')
-                            to_send = data.decode('ASCII')
+                            decoded = data.decode('ASCII')
 
-                    self.queue.put(to_send)
+                    # One not formated and formated string for hex
+                    # representation
+                    result = [decoded, self.add_html_colors(decoded)]
+
+                    self.queue.put(result)
 
         except KeyboardInterrupt:
             if self.ser:
@@ -249,6 +253,33 @@ class Model(threading.Thread, QObject):
 #==============================================================================
 # Utils
 #==============================================================================
+    
+    def add_html_colors(self, string):
+        '''
+        Use predifiend dictionary to find regex at the string and add color HTML
+        tags to them.
+        Args:
+            string: String to parse
+        Returns:
+            HTML parsed string.
+        '''
+        clr_set = {
+            0xA: '#0000AA',
+            0xD: '#00AA00'
+        }
+
+        line = list(string)
+        result = list()
+        for i, sym in enumerate(line):
+            if ord(sym) in clr_set.keys():
+                result.append('<span style="color: {}">'.format(
+                    clr_set[ord(sym)]))
+                result.append('{0:02x}'.format(ord(sym)).upper())
+                result.append('</span>')
+            else:
+                result.append('{0:02x}'.format(ord(sym)).upper())
+
+        return ''.join(result)
 
     def port_config(self):
         '''
