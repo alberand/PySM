@@ -70,7 +70,7 @@ class Model(threading.Thread, QObject):
 
                     if config['in_hex']:
                         # Only for Python 3.5 and newer
-                        to_send = data.hex().upper()
+                        decoded = data.hex().upper()
                     else:
                         if config['encode'].upper() in ['ASCII', 'UTF-8']:
                             try:
@@ -84,7 +84,9 @@ class Model(threading.Thread, QObject):
 
                     # One not formated and formated string for hex
                     # representation
-                    result = [decoded, self.add_html_colors(decoded)]
+                    hex_repr = self.add_html_colors(decoded)
+                    # print(hex_repr)
+                    result = [decoded, hex_repr]
 
                     self.queue.put(result)
 
@@ -268,6 +270,7 @@ class Model(threading.Thread, QObject):
             0xD: '#00AA00'
         }
 
+        i = 0
         line = list(string)
         result = list()
         for i, sym in enumerate(line):
@@ -279,7 +282,29 @@ class Model(threading.Thread, QObject):
             else:
                 result.append('{0:02x}'.format(ord(sym)).upper())
 
+            if (i + 1)%2 == 0:
+                result.append(' ')
+
         return ''.join(result)
+
+
+    def divide_text_in_blocks(self, string, length=4):
+        """
+        Divide string into substring of the 'length'.
+        Args:
+            string: string to divide.
+        Returns:
+            Divided string.
+        """
+        if length < 0:
+            return None
+
+        if len(string) < length:
+            return string
+
+        return ' '.join(string[i:i + length] for i in range(
+            0, len(string), length))
+
 
     def port_config(self):
         '''
