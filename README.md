@@ -19,13 +19,12 @@ python3 ./main.py
 ![Alt text](https://github.com/alberand/PySM/blob/master/stuff/screenshot.png?raw=true "PySM screenshot.")
 
 ### TODO
- - Add text decoding. For example: I want to see data in UTF-8, ASCII and Bytes
-   formats.
- - Add to screen for HEX representation and ASCII
+ - Change GUI policy. For now it's not obvious how to use it. For example port
+   change, start/stop
  - Possibly, color-scheme will be useful. For example, specific HEX codes are
    highlighted by predefined colors. 
     - Editor area for quick addition rules to color-scheme
- - Implements correct policy of interpreting special symbols in editor form.
+ - Implement correct policy of interpreting special symbols in editor form.
  - Possibly available hardware ports (RTS, DTR)
 
 References:
