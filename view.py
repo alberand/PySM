@@ -220,7 +220,8 @@ class View(QWidget):
         self.editer.appendPlainText(data[0])
         # self.editer.cursorForPosition(pos)
 
-        self.editor_hex.appendHtml(data[1])
+        for line in data[1]:
+            self.editor_hex.appendHtml(line)
 
     def process_incoming(self):
         while self.queue.qsize():

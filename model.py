@@ -273,19 +273,28 @@ class Model(threading.Thread, QObject):
         i = 0
         line = list(string)
         result = list()
+
+        sub_str = list()
         for i, sym in enumerate(line):
             if ord(sym) in clr_set.keys():
-                result.append('<span style="color: {}">'.format(
+                sub_str.append('<span style="color: {}">'.format(
                     clr_set[ord(sym)]))
-                result.append('{0:02x}'.format(ord(sym)).upper())
-                result.append('</span>')
+                sub_str.append('{0:02x}'.format(ord(sym)).upper())
+                sub_str.append('</span>')
             else:
-                result.append('{0:02x}'.format(ord(sym)).upper())
+                sub_str.append('{0:02x}'.format(ord(sym)).upper())
 
             if (i + 1)%2 == 0:
-                result.append(' ')
+                sub_str.append(' ')
 
-        return ''.join(result)
+            if (i + 1)%16 == 0:
+                result.append(''.join(sub_str))
+                sub_str = list()
+
+        if sub_str:
+            result.append(''.join(sub_str))
+
+        return result
 
 
     def divide_text_in_blocks(self, string, length=4):
