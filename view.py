@@ -52,6 +52,7 @@ class View(QWidget):
         self.timer.timeout.connect(self.update_gui)
         self.timer.start(100)
                 
+        self.resize(1000, 600)
         self.__initUI()
 
     def __initUI(self):
