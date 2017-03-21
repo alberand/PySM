@@ -287,7 +287,7 @@ class Model(threading.Thread, QObject):
             if (i + 1)%2 == 0:
                 sub_str.append(' ')
 
-            if (i + 1)%16 == 0:
+            if (i + 1)%config['hex_bytes_in_row'] == 0:
                 result.append(''.join(sub_str))
                 sub_str = list()
 

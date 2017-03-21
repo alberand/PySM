@@ -30,5 +30,6 @@ config = {
         # STOPBITS_TWO)
         'stopbits': s.STOPBITS_ONE,
         # HEX console coloring
-        'hex_colors': True
+        'hex_colors': True,
+        'hex_bytes_in_row': 16
 }
