@@ -59,7 +59,7 @@ class View(QWidget):
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_gui)
         self.timer.start(100)
-                
+
         # self.resize(1000, 600)
         self.__initUI()
 
@@ -84,11 +84,8 @@ class View(QWidget):
         cmd_btn.clicked.connect(self.emit_send_data)
         cmd_hbox.addWidget(cmd_btn)
 
-        # fa_icon = qta.icon('fa.flag')
-        # cmd_btn = QPushButton(fa_icon, ' Start')
         cmd_btn = StatusButton(self)
-        cmd_btn.status = 2
-        cmd_btn.clicked.connect(self.start_m.emit)
+        cmd_btn.sigs = [self.start_m.emit, self.pause_m.emit]
         cmd_hbox.addWidget(cmd_btn)
 
         # cmd_btn = QPushButton('Stop')
