@@ -17,12 +17,20 @@ from PyQt5.QtWidgets    import QMenuBar
 from PyQt5.QtWidgets    import QFileDialog
 from PyQt5.QtCore       import QPoint
 from PyQt5.QtCore       import QTimer
-from PyQt5.QtCore       import QObject
 from PyQt5.QtCore       import pyqtSignal
-from PyQt5.QtGui        import QTextCursor
+from PyQt5.QtCore       import QObject
 from PyQt5.QtCore       import Qt
+from PyQt5.QtGui        import QFont
+from PyQt5.QtGui        import QTextCursor
+from PyQt5.QtGui        import QFontMetrics
 
+from math               import floor
 from queue              import Queue
+
+import qtawesome        as qta
+
+from config             import config
+from status_button      import StatusButton
 
 
 class View(QWidget):
@@ -52,7 +60,7 @@ class View(QWidget):
         self.timer.timeout.connect(self.update_gui)
         self.timer.start(100)
                 
-        self.resize(1000, 600)
+        # self.resize(1000, 600)
         self.__initUI()
 
     def __initUI(self):
@@ -76,13 +84,16 @@ class View(QWidget):
         cmd_btn.clicked.connect(self.emit_send_data)
         cmd_hbox.addWidget(cmd_btn)
 
-        cmd_btn = QPushButton('Start')
+        # fa_icon = qta.icon('fa.flag')
+        # cmd_btn = QPushButton(fa_icon, ' Start')
+        cmd_btn = StatusButton(self)
+        cmd_btn.status = 2
         cmd_btn.clicked.connect(self.start_m.emit)
         cmd_hbox.addWidget(cmd_btn)
 
-        cmd_btn = QPushButton('Stop')
-        cmd_btn.clicked.connect(self.pause_m.emit)
-        cmd_hbox.addWidget(cmd_btn)
+        # cmd_btn = QPushButton('Stop')
+        # cmd_btn.clicked.connect(self.pause_m.emit)
+        # cmd_hbox.addWidget(cmd_btn)
 
         vbox.addLayout(cmd_hbox)
 
@@ -97,6 +108,17 @@ class View(QWidget):
         # HEX edit area
         self.editor_hex = QPlainTextEdit()
         self.editor_hex.scrollContentsBy = self.ModScrollContentsBy
+
+        # font = QFont("serif", 10)
+        font = self.editor_hex.document().defaultFont()
+        fm = QFontMetrics(font)
+        width = fm.width('0'*(config['hex_bytes_in_row']*2 +
+            (floor(config['hex_bytes_in_row']/2) - 1) + 10))
+        print(width)
+        self.editor_hex.setFont(font)
+
+        self.editor_hex.setFixedWidth(width)
+        self.editor_hex.setReadOnly(True)
         editor_hbox.addWidget(self.editor_hex)
 
         vbox.addLayout(editor_hbox)
