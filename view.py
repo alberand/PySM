@@ -84,9 +84,9 @@ class View(QWidget):
         cmd_btn.clicked.connect(self.emit_send_data)
         cmd_hbox.addWidget(cmd_btn)
 
-        cmd_btn = StatusButton(self)
-        cmd_btn.sigs = [self.start_m.emit, self.pause_m.emit]
-        cmd_hbox.addWidget(cmd_btn)
+        self.stat_btn = StatusButton(self)
+        self.stat_btn.sigs = [self.emit_start_m, self.emit_pause_m]
+        cmd_hbox.addWidget(self.stat_btn)
 
         # cmd_btn = QPushButton('Stop')
         # cmd_btn.clicked.connect(self.pause_m.emit)
@@ -256,6 +256,8 @@ class View(QWidget):
                     self.editer.ensureCursorVisible()
                     self.editor_hex.ensureCursorVisible()
                     self.scroll_down()
+
+                self.stat_btn.status = 2
             except Queue.empty:
                 pass
 
@@ -301,6 +303,13 @@ class View(QWidget):
         self.port_edit.clearFocus()
         self.port_changed.emit(self.port_edit.text())
 
+    def emit_pause_m(self):
+        self.stat_btn.status = 0
+        self.pause_m.emit()
+
+    def emit_start_m(self):
+        self.stat_btn.status = 2
+        self.start_m.emit()
 #==============================================================================
 # Events
 #==============================================================================
