@@ -16,24 +16,22 @@ from config             import config
 
 class StatusButton(QWidget):
 
-    def __init__(self, parent=None):
+    def __init__(self, start_m, pause_m, parent=None):
         QWidget.__init__(self, parent=parent)
 
         self._lyt  = QHBoxLayout()
         self._lyt.setSpacing(0)
         self._lyt.setContentsMargins(0, 0, 0, 0)
 
-        # fa.play fa.stop fa.pause fa.spinner
-        self._icon = 'fa.spinner'
-        self._text = 'Loading'
-        self._btn  = QPushButton(qta.icon(self._icon), self._text, parent=self)
-        self._clr  = '#D8D8D8'
-        self._btn.setStyleSheet('background-color: {};'.format(self._clr))
         # Signals: 0: start signal, pause signal
-        self._sigs = []
+        self._sigs = [start_m, pause_m]
+        # fa.play fa.stop fa.pause fa.spinner
+        self._st_loading()
+        self._btn  = QPushButton(self._icon, self._text, parent=self)
+        self._btn.setStyleSheet('background-color: {};'.format(self._clr))
+        self._btn.clicked.connect(self._sigs[1])
         # Status 0: connected, 1: loading, 2: paused
-        self.status = 0
-        self.clicked = self._btn.clicked
+        self._status = 1
 
         self._lyt.addWidget(self._btn)
         self.setLayout(self._lyt)
@@ -65,35 +63,49 @@ class StatusButton(QWidget):
 
     @property
     def status(self):
-        return self.status
+        return self._status
 
     @status.setter
     def status(self, status):
-        if not status:
+        print('Status {}'.format(status))
+        if not self.sigs:
+            print('Can\'t change status before signals will be assigned.')
             return None
 
         if status not in range(3):
             return None
 
+        self._status = status
+        print('Chaging status to: {}.'.format(self._status))
         if status == 0:
-            self._text = 'Running'
-            self._icon = qta.icon('fa.play')
-            self._clr  = '#0F822C'
-            self._btn.clicked.connect(self._sigs[1])
+            self._st_running()
         elif status == 1:
-            self._text = 'Loading'
-            self._icon = qta.icon('fa.spinner')
-            self._clr  = '#D8D8D8'
+            self._st_loading()
         elif status == 2:
-            print('Paused')
-            self._text = 'Paused'
-            self._icon = qta.icon('fa.pause')
-            self._clr  = '#DB9292'
-            self._btn.clicked.connect(self._sigs[0])
+            self._st_paused()
         else:
             pass
 
         self._repaint()
+
+    def _st_running(self):
+        self._text = 'Pause'
+        self._icon = qta.icon('fa.pause')
+        self._clr  = '#DB9292'
+        self._btn.disconnect()
+        self._btn.clicked.connect(self._sigs[1])
+
+    def _st_loading(self):
+        self._text = 'Loading'
+        self._icon = qta.icon('fa.spinner')
+        self._clr  = '#D8D8D8'
+
+    def _st_paused(self):
+        self._text = 'Run'
+        self._icon = qta.icon('fa.play')
+        self._clr  = '#0F822C'
+        self._btn.disconnect()
+        self._btn.clicked.connect(self._sigs[0])
 
     @property
     def sigs(self):
@@ -105,7 +117,6 @@ class StatusButton(QWidget):
             return None
 
         self._sigs = signals
-
 
     def _repaint(self):
         self._btn.setStyleSheet('background-color: {};'.format(self._clr))

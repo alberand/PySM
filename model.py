@@ -370,4 +370,3 @@ class Model(threading.Thread, QObject):
 
     def emit_update_device_list(self, dev_list):
         self.update_device_list.emit(dev_list)
-

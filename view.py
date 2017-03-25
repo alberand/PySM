@@ -84,8 +84,8 @@ class View(QWidget):
         cmd_btn.clicked.connect(self.emit_send_data)
         cmd_hbox.addWidget(cmd_btn)
 
-        self.stat_btn = StatusButton(self)
-        self.stat_btn.sigs = [self.emit_start_m, self.emit_pause_m]
+        self.stat_btn = StatusButton(self.emit_start_m, self.emit_pause_m,
+                parent=self)
         cmd_hbox.addWidget(self.stat_btn)
 
         # cmd_btn = QPushButton('Stop')
@@ -260,17 +260,13 @@ class View(QWidget):
         while self.queue.qsize():
             try:
                 msg = self.queue.get(0)
-                # Check contents of message and do what it says
-                # As a test, we simply print it
-                # print(bytes(msg, 'ASCII'), end='')
+
                 # self.editer.appendPlainText(msg)
                 self.appendText(msg)
                 if self.autoscroll:
                     self.editer.ensureCursorVisible()
                     self.editor_hex.ensureCursorVisible()
                     self.scroll_down()
-
-                self.stat_btn.status = 2
             except Queue.empty:
                 pass
 
@@ -317,12 +313,14 @@ class View(QWidget):
         self.port_changed.emit(self.port_edit.text())
 
     def emit_pause_m(self):
-        self.stat_btn.status = 0
-        self.pause_m.emit()
+        print('Pause')
+        self.stat_btn.status = 2
+        self.pause_m.emit(self)
 
     def emit_start_m(self):
-        self.stat_btn.status = 2
-        self.start_m.emit()
+        print('Start')
+        self.stat_btn.status = 0
+        self.start_m.emit(self)
 #==============================================================================
 # Events
 #==============================================================================
