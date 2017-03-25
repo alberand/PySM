@@ -2,8 +2,10 @@
 # coding=utf-8
 
 # System imports
-import  threading
+import  sys
+import  glob
 import  queue
+import  threading
 from    time                import sleep
 from    sys                 import exit
 
@@ -13,6 +15,7 @@ from    PyQt5.QtCore        import QObject
 
 # PySerial imports
 import  serial
+import serial.tools.list_ports
 from    serial.serialutil   import SerialException
 
 from config import config
@@ -23,6 +26,8 @@ class Model(threading.Thread, QObject):
     error = pyqtSignal(object)
     # Signal emitted when port configuratin changes
     port_conf_change = pyqtSignal(object)
+
+    update_device_list = pyqtSignal(object)
 
     def __init__(self):
         threading.Thread.__init__(self)
@@ -46,6 +51,7 @@ class Model(threading.Thread, QObject):
         self.ser        = None
         # Flag for main cycle
         self.running    = True
+        self.current_ports = []
 
     def run(self):
         '''
@@ -55,6 +61,10 @@ class Model(threading.Thread, QObject):
         '''
         try:
             while self.running:
+                if self.scan_ports():
+                    print("Update port's list. Ports: {}.".format(
+                        self.current_ports))
+
                 self.paused.wait()
                 if not self.ser.isOpen():
                     sleep(0.05)
@@ -127,6 +137,30 @@ class Model(threading.Thread, QObject):
             print('Fail to open default port.')
             self.ser = serial.Serial(
                     baudrate=self._br, timeout=self.timeout)
+
+    def scan_ports(self):
+        '''
+        Scans serial ports and if found changes in ports list (new one, one
+        dissapear etc.) update current port list.
+        Returns:
+            True if update.
+        '''
+        found_ports = self.list_serial_ports()
+        if found_ports != self.current_ports:
+            self.current_ports = found_ports
+            self.emit_update_device_list(self.current_ports)
+
+            return True
+
+        return False
+
+
+    def list_serial_ports(self):
+        """
+        Lists serial port names
+        """
+        return ['/dev/ttyUSB0', '/dev/ttyACM0']
+        return serial.tools.list_ports.comports()
 
 #==============================================================================
 # Attributes
@@ -333,4 +367,7 @@ class Model(threading.Thread, QObject):
 
     def emit_port_conf_change(self, value):
         self.port_conf_change.emit(value)
+
+    def emit_update_device_list(self, dev_list):
+        self.update_device_list.emit(dev_list)
 

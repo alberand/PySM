@@ -100,6 +100,7 @@ class View(QWidget):
         # Text edit area
         self.editer = QPlainTextEdit()
         self.editer.scrollContentsBy = self.ModScrollContentsBy
+        self.editer.setReadOnly(True)
         editor_hbox.addWidget(self.editer)
 
         # HEX edit area
@@ -107,14 +108,14 @@ class View(QWidget):
         self.editor_hex.scrollContentsBy = self.ModScrollContentsBy
 
         # font = QFont("serif", 10)
-        font = self.editor_hex.document().defaultFont()
-        fm = QFontMetrics(font)
-        width = fm.width('0'*(config['hex_bytes_in_row']*2 +
-            (floor(config['hex_bytes_in_row']/2) - 1) + 10))
-        print(width)
-        self.editor_hex.setFont(font)
+        # font = self.editor_hex.document().defaultFont()
+        # fm = QFontMetrics(font)
+        # width = fm.width('0'*(config['hex_bytes_in_row']*2 +
+            # (floor(config['hex_bytes_in_row']/2) - 1) + 10))
+        # print(width)
+        # self.editor_hex.setFont(font)
 
-        self.editor_hex.setFixedWidth(width)
+        # self.editor_hex.setFixedWidth(width)
         self.editor_hex.setReadOnly(True)
         editor_hbox.addWidget(self.editor_hex)
 
@@ -166,17 +167,17 @@ class View(QWidget):
 
         vbox.addLayout(stng_hbox)
 
-        # Port editing form
-        port_hbox = QHBoxLayout()
-        port_lbl = QLabel('Port: ')
-        port_hbox.addWidget(port_lbl)
+        # Port's list
+        self.ports_hbox = QHBoxLayout()
+        port_lbl = QLabel('Ports: ')
+        self.ports_hbox.addWidget(port_lbl)
 
-        self.port_edit = QLineEdit()
+        # self.port_edit = QLineEdit()
 
-        self.port_edit.editingFinished.connect(self.changePort)
-        port_hbox.addWidget(self.port_edit)
+        # self.port_edit.editingFinished.connect(self.changePort)
+        # self.port_hbox.addWidget(self.port_edit)
 
-        vbox.addLayout(port_hbox)
+        vbox.addLayout(self.ports_hbox)
 
         # Status Bar
         self.status_bar = QStatusBar()
@@ -188,6 +189,18 @@ class View(QWidget):
         vbox.addWidget(self.status_bar)
 
         self.setLayout(vbox)
+
+    def add_devices(self, dev_list):
+        print(dev_list)
+        if not dev_list:
+            return None
+
+        for device in dev_list:
+            device_btn = QPushButton(device)
+            device_btn.connect(self.changePort)
+            self.ports_hbox.addWidget(device_btn)
+
+        self.ports_hbox.show()
 
     def show_error(self, value):
         msg = QMessageBox(
@@ -207,8 +220,8 @@ class View(QWidget):
     def set_autoscroll(self, value):
         self.autoscroll = value
 
-    def set_port(self, value):
-        self.port_edit.insert(value)
+    # def set_port(self, value):
+        # self.port_edit.insert(value)
 
     def get_cmd(self):
         return self.cmd_edit.text()
