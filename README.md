@@ -26,6 +26,7 @@ python3 ./main.py
     - Editor area for quick addition rules to color-scheme
  - Implement correct policy of interpreting special symbols in editor form.
  - Possibly available hardware ports (RTS, DTR)
+ - If there is more than 5 devices convert buttons to QComboBox
 
 References:
 ===============================================================================
