@@ -168,16 +168,18 @@ class View(QWidget):
         vbox.addLayout(stng_hbox)
 
         # Port's list
+        ports_hbox_name = QHBoxLayout()
         self.ports_hbox = QHBoxLayout()
         port_lbl = QLabel('Ports: ')
-        self.ports_hbox.addWidget(port_lbl)
+        ports_hbox_name.addWidget(port_lbl)
+        ports_hbox_name.addLayout(self.ports_hbox)
 
         # self.port_edit = QLineEdit()
 
         # self.port_edit.editingFinished.connect(self.changePort)
         # self.port_hbox.addWidget(self.port_edit)
 
-        vbox.addLayout(self.ports_hbox)
+        vbox.addLayout(ports_hbox_name)
 
         # Status Bar
         self.status_bar = QStatusBar()
@@ -190,17 +192,32 @@ class View(QWidget):
 
         self.setLayout(vbox)
 
+    def remove_all_widgets(self, layout):
+        while layout.count() != 0:
+            child = layout.takeAt(0)
+            if child.layout() != 0:
+                lay = child.layout()
+                del lay
+            elif child.widget() != 0:
+                wid = child.widget()
+                del wid
+            del child
+
     def add_devices(self, dev_list):
-        print(dev_list)
+        print('Ports: {}'.format(dev_list))
+        self.remove_all_widgets(self.ports_hbox)
         if not dev_list:
+            no_devs = QLabel('No ports found.')
+            self.ports_hbox.addWidget(no_devs)
+
             return None
 
         for device in dev_list:
-            device_btn = QPushButton(device)
-            device_btn.connect(self.changePort)
+            device_btn = QPushButton(device.name)
+            device_btn.clicked.connect(self.changePort)
             self.ports_hbox.addWidget(device_btn)
 
-        self.ports_hbox.show()
+        self.update()
 
     def show_error(self, value):
         msg = QMessageBox(
