@@ -28,7 +28,7 @@ class Presenter:
 
         self.__model.error.connect(self.__view.show_error)
         self.__model.port_conf_change.connect(self.__view.update_status_bar)
-        self.__model.update_device_list.connect(self.__view.show_error)
+        self.__model.update_device_list.connect(self.__view.add_devices)
 
         self.__view.set_queue(self.__model.get_queue())
         self.__view.set_end_cmd(self.end_cmd)
