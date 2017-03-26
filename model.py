@@ -106,12 +106,14 @@ class Model(threading.Thread, QObject):
             exit()
 
     def pause(self):
-        self.ser.close()
+        if self.ser:
+            self.ser.close()
         if self.paused.isSet():
             self.paused.clear()
 
     def resume(self):
-        self.ser.open()
+        if self.ser:
+            self.ser.open()
         if not self.paused.isSet():
             self.paused.set()
 
@@ -159,7 +161,7 @@ class Model(threading.Thread, QObject):
         """
         Lists serial port names
         """
-        return ['/dev/ttyUSB0', '/dev/ttyACM0']
+        # return ['/dev/ttyUSB0', '/dev/ttyACM0']
         return serial.tools.list_ports.comports()
 
 #==============================================================================
@@ -370,3 +372,7 @@ class Model(threading.Thread, QObject):
 
     def emit_update_device_list(self, dev_list):
         self.update_device_list.emit(dev_list)
+
+if __name__ == '__main__':
+    a = Model()
+    print(a.list_serial_ports())
