@@ -12,7 +12,6 @@ class Presenter:
         self.__view = view
 
         # Run communication and start thread
-        self.__model.begin()
         self.__model.start()
 
         # Signal connection

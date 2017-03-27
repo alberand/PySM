@@ -48,7 +48,9 @@ class Model(threading.Thread, QObject):
         self.eol        = config['eol'][0]
 
         # PySerial object
-        self.ser        = None
+        self.ser = serial.Serial(baudrate=self._br, timeout=self.timeout,
+                bytesize=self._bytesize, parity=self._parity,
+                stopbits=self._stopbits)
         # Flag for main cycle
         self.running    = True
         self.current_ports = []
@@ -71,13 +73,13 @@ class Model(threading.Thread, QObject):
                     continue
 
                 try:
-                    data = self.readline()
+                    data = self.read()
                 except SerialException as e:
                     print('Error occured while reading data. ' + str(e))
+                    sleep(0.05)
                     continue
 
                 if data:
-
                     if config['in_hex']:
                         # Only for Python 3.5 and newer
                         decoded = data.hex().upper()
@@ -125,20 +127,6 @@ class Model(threading.Thread, QObject):
         self.paused.set()
         if self.ser:
             self.ser.close()
-
-    def begin(self):
-        '''
-        Initializate PySerial object
-        '''
-        try:
-            self.ser = serial.Serial(
-                    port=self._port, baudrate=self._br, timeout=self.timeout,
-                    bytesize=self._bytesize, stopbits=self._stopbits
-            )
-        except SerialException:
-            print('Fail to open default port.')
-            self.ser = serial.Serial(
-                    baudrate=self._br, timeout=self.timeout)
 
     def scan_ports(self):
         '''
@@ -221,9 +209,9 @@ class Model(threading.Thread, QObject):
 #==============================================================================
 # PySerial communication
 #==============================================================================
-    def read(self, size=1):
+    def read(self, size=None):
         '''
-        Read bytes from port. 
+        Read all bytes in waiting buffer. 
         Args:
             size: integer specify number of bytes to read. Default is 1.
         Returns:
@@ -233,10 +221,12 @@ class Model(threading.Thread, QObject):
 
         try:
             if self.ser.isOpen():
+                if not size:
+                    size = self.ser.in_waiting()
                 try:
                     data = self.ser.read(size)
-                except TypeError:
-                    print('Strange bug in the library.')
+                except TypeError as e:
+                    print('Error while reading: {}.'.format(e))
             else:
                 print('Can\'t read from the port. Port isn\'t open.')
         except SerialException as e:
@@ -256,18 +246,13 @@ class Model(threading.Thread, QObject):
 
         try:
             if self.ser.isOpen():
-                sym = self.read()
-                while sym != b'\n' and sym and len(data) < 256:
-                    data += sym
-                    sym = self.read()
+                data = self.ser.readline()
             else:
                 print('Can\'t read from the port. Port isn\'t open.')
 
         except SerialException as e:
             print('Exception occured, while reading line from serial port.')
 
-        # return data.decode('UTF-8')
-        # return data.decode('ASCII')
         return data
 
     def write(self, data):
@@ -279,8 +264,8 @@ class Model(threading.Thread, QObject):
         try:
             if self.ser.isOpen():
                 self.ser.write(
-                        bytes(data, 'ASCII') + 
-                        bytes(self.get_eol(), 'ASCII')
+                        bytes(data, self.config['encode']) + 
+                        bytes(self.get_eol(), self.config['encode'])
                 )
             else:
                 print('Can\'t write to the port. Port isn\'t open.')
