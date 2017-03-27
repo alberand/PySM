@@ -5,6 +5,7 @@
 import  sys
 import  glob
 import  queue
+import  select
 import  threading
 from    time                import sleep
 from    sys                 import exit
@@ -15,7 +16,7 @@ from    PyQt5.QtCore        import QObject
 
 # PySerial imports
 import  serial
-import serial.tools.list_ports
+import  serial.tools.list_ports
 from    serial.serialutil   import SerialException
 
 from config import config
@@ -63,6 +64,8 @@ class Model(threading.Thread, QObject):
         '''
         try:
             while self.running:
+                data = b''
+
                 if self.scan_ports():
                     print("Update port's list. Ports: {}.".format(
                         self.current_ports))
@@ -73,7 +76,13 @@ class Model(threading.Thread, QObject):
                     continue
 
                 try:
-                    data = self.read()
+                    rlist = select.select([self.ser], [], [], self.timeout)
+                    if not rlist:
+                        continue 
+
+                    size = self.ser.in_waiting
+                    if size:
+                        data = self.read(size)
                 except SerialException as e:
                     print('Error occured while reading data. ' + str(e))
                     sleep(0.05)
@@ -101,6 +110,7 @@ class Model(threading.Thread, QObject):
                     result = [decoded, hex_repr]
 
                     self.queue.put(result)
+
 
         except KeyboardInterrupt:
             if self.ser:
@@ -175,16 +185,19 @@ class Model(threading.Thread, QObject):
 
     @port.setter
     def port(self, port):
+        print('Set new port: {}.'.format(port))
         if self.ser and self.ser.isOpen():
             self.ser.close()
 
-        if self._port != port:
+        if self.ser.port != port:
             self._port = port
+            self.ser.port = port
         else:
             return
 
         try:
-            self.ser.port = port
+            print('Appling changed port {}.'.format(self._port))
+            self.ser.port = self._port
             self.resume()
         except SerialException as e:
             self.emit_error('Can\'t open this port: ' + str(port) + '.')
@@ -209,7 +222,7 @@ class Model(threading.Thread, QObject):
 #==============================================================================
 # PySerial communication
 #==============================================================================
-    def read(self, size=None):
+    def read(self, size=1):
         '''
         Read all bytes in waiting buffer. 
         Args:
@@ -221,8 +234,7 @@ class Model(threading.Thread, QObject):
 
         try:
             if self.ser.isOpen():
-                if not size:
-                    size = self.ser.in_waiting()
+                print('Size to read: {}.'.format(size))
                 try:
                     data = self.ser.read(size)
                 except TypeError as e:

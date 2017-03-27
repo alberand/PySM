@@ -60,7 +60,7 @@ class View(QWidget):
         self.timer.timeout.connect(self.update_gui)
         self.timer.start(100)
 
-        # self.resize(1000, 600)
+        self.resize(1000, 600)
         self.__initUI()
 
     def __initUI(self):
@@ -213,8 +213,8 @@ class View(QWidget):
             return None
 
         for device in dev_list:
-            device_btn = QPushButton(device.name)
-            device_btn.clicked.connect(self.changePort)
+            device_btn = QPushButton(device.device)
+            device_btn.clicked.connect(lambda: self.changePort(device_btn))
             self.ports_hbox.addWidget(device_btn)
 
         self.update()
@@ -264,11 +264,11 @@ class View(QWidget):
         self.update()
 
     def appendText(self, data):
-        # pos = QPoint(self.editer.textCursor().position(), 0)
-        # self.editer.moveCursor(QTextCursor.End)
-        # self.editer.insertPlainText(text)
-        self.editer.appendPlainText(data[0])
-        # self.editer.cursorForPosition(pos)
+        pos = QPoint(self.editer.textCursor().position(), 0)
+        self.editer.moveCursor(QTextCursor.End)
+        self.editer.insertPlainText(data[0])
+        # self.editer.appendHtml(data[0])
+        self.editer.cursorForPosition(pos)
 
         for line in data[1]:
             self.editor_hex.appendHtml(line)
@@ -293,10 +293,10 @@ class View(QWidget):
             sb.setValue(sb.maximum())
             editor.moveCursor(QTextCursor.End)
 
-    def changePort(self):
+    def changePort(self, btn):
         if not self.msg_sent:
             self.msg_sent = True
-            self.emit_port_changed()
+            self.emit_port_changed(btn.text())
         else:
             self.msg_sent = False
             return None
@@ -325,9 +325,8 @@ class View(QWidget):
     def emit_eol_changed(self, value):
         self.eol_changed.emit(value)
 
-    def emit_port_changed(self):
-        self.port_edit.clearFocus()
-        self.port_changed.emit(self.port_edit.text())
+    def emit_port_changed(self, port_name):
+        self.port_changed.emit(port_name)
 
     def emit_pause_m(self):
         print('Pause')
