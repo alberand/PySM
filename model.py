@@ -134,11 +134,21 @@ class Model(threading.Thread, QObject):
 
     def open_port(self):
         if self.ser:
-            self.ser.open()
+            logger.debug('Opening port {}.'.format(self._port))
+            try:
+                self.ser.open()
+                self.resume()
+            except SerialException as e:
+                self.emit_error(0, 'Can\'t open port: ' + str(port) + '.')
+                logger.debug('Fail to open port: {}'.format(e))
 
     def close_port(self):
         if self.ser:
-            self.ser.close()
+            try:
+                self.ser.close()
+            except SerialException as e:
+                self.emit_error(1, 'Can\'t close port: ' + str(port) + '.')
+                logger.debug('Fail to close port: {}'.format(e))
 
     def pause(self):
         self.close_port()
@@ -197,18 +207,16 @@ class Model(threading.Thread, QObject):
         '''
         data = None
 
-        try:
-            if self.ser.isOpen():
-                logger.debug('Size to read: {}.'.format(size))
-                try:
-                    data = self.ser.read(size)
-                except TypeError as e:
-                    logger.error('Error while reading: {}.'.format(e))
-            else:
-                logger.info('Can\'t read from the port. Port isn\'t open.')
-        except SerialException as e:
-            logger.error('Exception occured, while reading from serial port. ' 
-                    + str(e))
+        if self.ser.isOpen():
+            logger.debug('Size to read: {}.'.format(size))
+            try:
+                data = self.ser.read(size)
+            except TypeError as e:
+                logger.error('Error while reading: {}.'.format(e))
+                self.emit_error(2, 'Fail reading from port: {}'.format(
+                    self._port))
+        else:
+            logger.info('Can\'t read from the port. Port isn\'t open.')
 
         return data
 
@@ -221,14 +229,16 @@ class Model(threading.Thread, QObject):
         '''
         data = b''
 
-        try:
-            if self.ser.isOpen():
+        if self.ser.isOpen():
+            try:
                 data = self.ser.readline()
-            else:
-                logger.info('Can\'t read from the port. Port isn\'t open.')
-
-        except SerialException as e:
-            logger.error('Exception occured, while reading line from serial port.')
+            except SerialException as e:
+                logger.error(('Exception occured, while reading line from ' 
+                        'serial port.'))
+                self.emit_error(2, 'Fail reading from port: {}'.format(
+                    self._port))
+        else:
+            logger.info('Can\'t read from the port. Port isn\'t open.')
 
         return data
 
@@ -238,17 +248,17 @@ class Model(threading.Thread, QObject):
         Args:
             data: data to send
         '''
-        try:
-            if self.ser.isOpen():
-                self.ser.write(
-                        bytes(data, self.config['encode']) + 
-                        bytes(self.get_eol(), self.config['encode'])
-                )
-            else:
-                logger.info('Can\'t write to the port. Port isn\'t open.')
-        except SerialExceptin as e:
-            logger.error(('Exception occured, while writing to serial port.'
-                    '{}').format(e))
+        if self.ser.isOpen():
+            try:
+                self.ser.write(bytes(data, self.config['encode']) + 
+                               bytes(self.get_eol(), self.config['encode']))
+            except SerialExceptin as e:
+                logger.error(('Exception occured, while writing to serial port.'
+                        '{}').format(e))
+                self.emit_error(3, 'Fail writing to port: {}'.format(
+                    self._port))
+        else:
+            logger.info('Can\'t write to the port. Port isn\'t open.')
 
 #==============================================================================
 # Attributes
@@ -275,24 +285,13 @@ class Model(threading.Thread, QObject):
     def port(self, port):
         logger.debug('Set new port: {}.'.format(port))
         if self.ser and self.ser.isOpen():
-            self.ser.close()
+            self.close_port()
 
         if self.ser.port != port:
             self._port = port
             self.ser.port = port
         else:
-            return
-
-        try:
-            logger.debug('Appling changed port {}.'.format(self._port))
-            self.ser.port = self._port
-            self.resume()
-        except SerialException as e:
-            self.emit_error('Can\'t open this port: ' + str(port) + '.')
-            logger.debug(e)
-            self.ser.close()
-
-        self.emit_port_conf_change(self.port_config())
+            return None
 
     def get_queue(self):
         return self.queue
