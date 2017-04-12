@@ -6,6 +6,7 @@ import  sys
 import  glob
 import  queue
 import  select
+import  logging
 import  threading
 from    time                import sleep
 from    sys                 import exit
@@ -21,14 +22,22 @@ from    serial.serialutil   import SerialException
 
 from config import config
 
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 class Model(threading.Thread, QObject):
 
-    # This signal emitted when program fail to read serial port (self.port)
-    error = pyqtSignal(object)
     # Signal emitted when port configuratin changes
     port_conf_change = pyqtSignal(object)
 
     update_device_list = pyqtSignal(object)
+
+    # Emitted to indecate that error occured.
+    # Fails: open port/close port/read from port/write to port
+    error = pyqtSignal(object)
+    # Emitted when data is ready
+    data_ready = pyqtSignal(object)
 
     def __init__(self):
         threading.Thread.__init__(self)
@@ -38,15 +47,10 @@ class Model(threading.Thread, QObject):
         self.paused = threading.Event()
         self.paused.set()
 
-        # Communications settings
-        self._port      = config['port']
-        self._br        = config['baudrate']
-        self._parity    = config['parity']
-        self._bytesize  = config['bytesize']
-        self._stopbits  = config['stopbits']
-        self.timeout    = config['timeout']
-        # Line ending id
-        self.eol        = config['eol'][0]
+        # Set configuration from config file
+        self.set_configuration(config['port'], config['baudrate'], 
+                config['parity'], config['bytesize'], config['stopbits'],
+                config['timeout'], config['eol'][0])
 
         # PySerial object
         self.ser = serial.Serial(baudrate=self._br, timeout=self.timeout,
@@ -55,6 +59,17 @@ class Model(threading.Thread, QObject):
         # Flag for main cycle
         self.running    = True
         self.current_ports = []
+
+    def set_configuration(self, port=None, br=9600, parity=serial.PARITY_NONE, 
+            bytesize=serial.EIGHTBITS, stopbits=serial.STOPBITS_ONE, timeout=3,
+            eol='\n')
+        self._port      = port or config['port']
+        self._br        = br or config['baudrate']
+        self._parity    = parity or config['parity']
+        self._bytesize  = bytesize or config['bytesize']
+        self._stopbits  = stopbits or config['stopbits']
+        self.timeout    = timeout or config['timeout']
+        self.eol        = eol or config['eol'][0]
 
     def run(self):
         '''
@@ -67,7 +82,7 @@ class Model(threading.Thread, QObject):
                 data = b''
 
                 if self.scan_ports():
-                    print("Update port's list. Ports: {}.".format(
+                    logger.info("Update port's list. Ports: {}.".format(
                         self.current_ports))
 
                 self.paused.wait()
@@ -84,7 +99,7 @@ class Model(threading.Thread, QObject):
                     if size:
                         data = self.read(size)
                 except SerialException as e:
-                    print('Error occured while reading data. ' + str(e))
+                    logger.error('Error occured while reading data. ' + str(e))
                     sleep(0.05)
                     continue
 
@@ -97,10 +112,10 @@ class Model(threading.Thread, QObject):
                             try:
                                 decoded = data.decode(config['encode'])
                             except UnicodeError as e:
-                                print('Fail to decode bytes. Error: {}'.format(
+                                logger.warn('Fail to decode bytes. Error: {}'.format(
                                     e))
                         else:
-                            print('Wrong decoding format. Using ASCII.')
+                            logger.error('Wrong decoding format. Using ASCII.')
                             decoded = data.decode('ASCII')
 
                     # One not formated and formated string for hex
@@ -117,15 +132,23 @@ class Model(threading.Thread, QObject):
                 self.ser.close()
             exit()
 
-    def pause(self):
+    def open_port(self):
+        if self.ser:
+            self.ser.open()
+
+    def close_port(self):
         if self.ser:
             self.ser.close()
+
+    def pause(self):
+        self.close_port()
+
         if self.paused.isSet():
             self.paused.clear()
 
     def resume(self):
-        if self.ser:
-            self.ser.open()
+        self.open_port()
+
         if not self.paused.isSet():
             self.paused.set()
 
@@ -159,8 +182,73 @@ class Model(threading.Thread, QObject):
         """
         Lists serial port names
         """
-        # return ['/dev/ttyUSB0', '/dev/ttyACM0']
         return serial.tools.list_ports.comports()
+
+#==============================================================================
+# PySerial communication
+#==============================================================================
+    def read(self, size=1):
+        '''
+        Read all bytes in waiting buffer. 
+        Args:
+            size: integer specify number of bytes to read. Default is 1.
+        Returns:
+            String
+        '''
+        data = None
+
+        try:
+            if self.ser.isOpen():
+                logger.debug('Size to read: {}.'.format(size))
+                try:
+                    data = self.ser.read(size)
+                except TypeError as e:
+                    logger.error('Error while reading: {}.'.format(e))
+            else:
+                logger.info('Can\'t read from the port. Port isn\'t open.')
+        except SerialException as e:
+            logger.error('Exception occured, while reading from serial port. ' 
+                    + str(e))
+
+        return data
+
+    def readline(self):
+        '''
+        Read line from serial port. Read byte by byte until program get '\n'
+        symbol.
+        Returns:
+            String
+        '''
+        data = b''
+
+        try:
+            if self.ser.isOpen():
+                data = self.ser.readline()
+            else:
+                logger.info('Can\'t read from the port. Port isn\'t open.')
+
+        except SerialException as e:
+            logger.error('Exception occured, while reading line from serial port.')
+
+        return data
+
+    def write(self, data):
+        '''
+        Write data to serial port.
+        Args:
+            data: data to send
+        '''
+        try:
+            if self.ser.isOpen():
+                self.ser.write(
+                        bytes(data, self.config['encode']) + 
+                        bytes(self.get_eol(), self.config['encode'])
+                )
+            else:
+                logger.info('Can\'t write to the port. Port isn\'t open.')
+        except SerialExceptin as e:
+            logger.error(('Exception occured, while writing to serial port.'
+                    '{}').format(e))
 
 #==============================================================================
 # Attributes
@@ -185,7 +273,7 @@ class Model(threading.Thread, QObject):
 
     @port.setter
     def port(self, port):
-        print('Set new port: {}.'.format(port))
+        logger.debug('Set new port: {}.'.format(port))
         if self.ser and self.ser.isOpen():
             self.ser.close()
 
@@ -196,12 +284,12 @@ class Model(threading.Thread, QObject):
             return
 
         try:
-            print('Appling changed port {}.'.format(self._port))
+            logger.debug('Appling changed port {}.'.format(self._port))
             self.ser.port = self._port
             self.resume()
         except SerialException as e:
             self.emit_error('Can\'t open this port: ' + str(port) + '.')
-            print(e)
+            logger.debug(e)
             self.ser.close()
 
         self.emit_port_conf_change(self.port_config())
@@ -213,77 +301,11 @@ class Model(threading.Thread, QObject):
         if index < len(config['eol']) and index >= 0:
             self.eol = config['eol'][index]
         else:
-            print('Can\t set up this type of End Of Line. Because it\'s not in'
-                  'standart list.')
+            logger.error('Can\t set up this type of End Of Line. Because it\'s '
+                    'not instandart list.')
 
     def get_eol(self):
         return self.eol
-
-#==============================================================================
-# PySerial communication
-#==============================================================================
-    def read(self, size=1):
-        '''
-        Read all bytes in waiting buffer. 
-        Args:
-            size: integer specify number of bytes to read. Default is 1.
-        Returns:
-            String
-        '''
-        data = None
-
-        try:
-            if self.ser.isOpen():
-                print('Size to read: {}.'.format(size))
-                try:
-                    data = self.ser.read(size)
-                except TypeError as e:
-                    print('Error while reading: {}.'.format(e))
-            else:
-                print('Can\'t read from the port. Port isn\'t open.')
-        except SerialException as e:
-            print('Exception occured, while reading from serial port. ' 
-                    + str(e))
-
-        return data
-
-    def readline(self):
-        '''
-        Read line from serial port. Read byte by byte until program get '\n'
-        symbol.
-        Returns:
-            String
-        '''
-        data = b''
-
-        try:
-            if self.ser.isOpen():
-                data = self.ser.readline()
-            else:
-                print('Can\'t read from the port. Port isn\'t open.')
-
-        except SerialException as e:
-            print('Exception occured, while reading line from serial port.')
-
-        return data
-
-    def write(self, data):
-        '''
-        Write data to serial port.
-        Args:
-            data: data to send
-        '''
-        try:
-            if self.ser.isOpen():
-                self.ser.write(
-                        bytes(data, self.config['encode']) + 
-                        bytes(self.get_eol(), self.config['encode'])
-                )
-            else:
-                print('Can\'t write to the port. Port isn\'t open.')
-        except SerialExceptin as e:
-            print('Exception occured, while writing to serial port.')
-            print(e)
 
 #==============================================================================
 # Utils
@@ -298,10 +320,6 @@ class Model(threading.Thread, QObject):
         Returns:
             HTML parsed string.
         '''
-        clr_set = {
-            0xA: '#0000AA',
-            0xD: '#00AA00'
-        }
 
         i = 0
         line = list(string)
@@ -309,9 +327,9 @@ class Model(threading.Thread, QObject):
 
         sub_str = list()
         for i, sym in enumerate(line):
-            if ord(sym) in clr_set.keys():
+            if ord(sym) in config['clr_set'].keys():
                 sub_str.append('<span style="color: {}">'.format(
-                    clr_set[ord(sym)]))
+                    config['clr_set'][ord(sym)]))
                 sub_str.append('{0:02x}'.format(ord(sym)).upper())
                 sub_str.append('</span>')
             else:
@@ -361,8 +379,28 @@ class Model(threading.Thread, QObject):
 # Signals
 #==============================================================================
 
-    def emit_error(self, value):
-        self.error.emit(value)
+    def emit_error(self, code):
+        '''
+        Emits error signal. Signals:
+            0 = Fail to open port
+            1 = Fail to close port
+            2 = Fail to read from the port
+            3 = Fail to write to the port
+        Args:
+            code: int in range 0 - 3.
+        '''
+        if code in range(3):
+            self.error.emit(code)
+        else:
+            logger.debug('Unknown error code.')
+
+    def emit_data_ready(self, data):
+        '''
+        Emits that data read from serial port is ready to send.
+        Args:
+            data: string
+        '''
+        self.data_ready.emit(data)
 
     def emit_port_conf_change(self, value):
         self.port_conf_change.emit(value)
