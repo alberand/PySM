@@ -23,7 +23,7 @@ from    serial.serialutil   import SerialException
 from config import config
 
 # Set up logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 class Model(threading.Thread, QObject):
@@ -45,7 +45,7 @@ class Model(threading.Thread, QObject):
         # Queue with data (lines) received from serial port
         self.queue      = queue.Queue()
         self.paused = threading.Event()
-        self.paused.set()
+        self.paused.clear()
 
         # Set configuration from config file
         self.set_configuration(config['port'], config['baudrate'], 
@@ -62,7 +62,7 @@ class Model(threading.Thread, QObject):
 
     def set_configuration(self, port=None, br=9600, parity=serial.PARITY_NONE, 
             bytesize=serial.EIGHTBITS, stopbits=serial.STOPBITS_ONE, timeout=3,
-            eol='\n')
+            eol='\n'):
         self._port      = port or config['port']
         self._br        = br or config['baudrate']
         self._parity    = parity or config['parity']
@@ -87,23 +87,23 @@ class Model(threading.Thread, QObject):
 
                 self.paused.wait()
                 if not self.ser.isOpen():
-                    sleep(0.05)
-                    continue
+                    self.open_port()
 
-                try:
-                    rlist = select.select([self.ser], [], [], self.timeout)
-                    if not rlist:
-                        continue 
-
-                    size = self.ser.in_waiting
-                    if size:
-                        data = self.read(size)
-                except SerialException as e:
-                    logger.error('Error occured while reading data. ' + str(e))
-                    sleep(0.05)
-                    continue
+                rlist = select.select([self.ser], [], [], self.timeout)
+                if not rlist:
+                    continue 
+                else:
+                    try:
+                        size = self.ser.inWaiting()
+                        if size:
+                            data = self.read(size)
+                    except SerialException as e:
+                        logger.error('Error occured while reading data. ' + str(e))
+                        sleep(0.05)
+                        continue
 
                 if data:
+                    decoded = ''
                     if config['in_hex']:
                         # Only for Python 3.5 and newer
                         decoded = data.hex().upper()
@@ -125,8 +125,6 @@ class Model(threading.Thread, QObject):
                     result = [decoded, hex_repr]
 
                     self.queue.put(result)
-
-
         except KeyboardInterrupt:
             if self.ser:
                 self.ser.close()
@@ -139,7 +137,7 @@ class Model(threading.Thread, QObject):
                 self.ser.open()
                 self.resume()
             except SerialException as e:
-                self.emit_error(0, 'Can\'t open port: ' + str(port) + '.')
+                self.emit_error(0, 'Can\'t open port: ' + str(self._port) + '.')
                 logger.debug('Fail to open port: {}'.format(e))
 
     def close_port(self):
@@ -151,13 +149,16 @@ class Model(threading.Thread, QObject):
                 logger.debug('Fail to close port: {}'.format(e))
 
     def pause(self):
-        self.close_port()
+        if self.ser.isOpen():
+            self.close_port()
 
         if self.paused.isSet():
             self.paused.clear()
 
+
     def resume(self):
-        self.open_port()
+        if not self.ser.isOpen():
+            self.open_port()
 
         if not self.paused.isSet():
             self.paused.set()
@@ -211,6 +212,7 @@ class Model(threading.Thread, QObject):
             logger.debug('Size to read: {}.'.format(size))
             try:
                 data = self.ser.read(size)
+                self.ser.flushInput()
             except TypeError as e:
                 logger.error('Error while reading: {}.'.format(e))
                 self.emit_error(2, 'Fail reading from port: {}'.format(
@@ -232,6 +234,7 @@ class Model(threading.Thread, QObject):
         if self.ser.isOpen():
             try:
                 data = self.ser.readline()
+                self.ser.flushInput()
             except SerialException as e:
                 logger.error(('Exception occured, while reading line from ' 
                         'serial port.'))
@@ -252,6 +255,7 @@ class Model(threading.Thread, QObject):
             try:
                 self.ser.write(bytes(data, self.config['encode']) + 
                                bytes(self.get_eol(), self.config['encode']))
+                self.ser.flushOutput()
             except SerialExceptin as e:
                 logger.error(('Exception occured, while writing to serial port.'
                         '{}').format(e))
@@ -378,7 +382,7 @@ class Model(threading.Thread, QObject):
 # Signals
 #==============================================================================
 
-    def emit_error(self, code):
+    def emit_error(self, code, msg):
         '''
         Emits error signal. Signals:
             0 = Fail to open port
@@ -389,7 +393,7 @@ class Model(threading.Thread, QObject):
             code: int in range 0 - 3.
         '''
         if code in range(3):
-            self.error.emit(code)
+            self.error.emit(msg)
         else:
             logger.debug('Unknown error code.')
 
