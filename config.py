@@ -31,5 +31,10 @@ config = {
         'stopbits': s.STOPBITS_ONE,
         # HEX console coloring
         'hex_colors': True,
-        'hex_bytes_in_row': 16
+        'hex_bytes_in_row': 16,
+        # Colors definition for highlitning
+        'clr_set':  {
+            0x0A: '#0000AA',
+            0x0D: '#00AA00'
+        }
 }

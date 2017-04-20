@@ -23,7 +23,8 @@ class Presenter:
         self.__view.eol_changed.connect(self.__model.set_eol)
 
         self.__view.pause_m.connect(self.__model.pause)
-        self.__view.start_m.connect(self.start_model)
+        # self.__view.start_m.connect(self.start_model)
+        self.__view.start_m.connect(self.__model.resume)
 
         self.__model.error.connect(self.__view.show_error)
         self.__model.port_conf_change.connect(self.__view.update_status_bar)
