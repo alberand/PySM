@@ -15,6 +15,7 @@ from PyQt5.QtWidgets    import QMessageBox
 from PyQt5.QtWidgets    import QStatusBar
 from PyQt5.QtWidgets    import QMenuBar
 from PyQt5.QtWidgets    import QFileDialog
+from PyQt5.QtWidgets    import QComboBox
 from PyQt5.QtCore       import QPoint
 from PyQt5.QtCore       import QTimer
 from PyQt5.QtCore       import pyqtSignal
@@ -174,10 +175,8 @@ class View(QWidget):
         ports_hbox_name.addWidget(port_lbl)
         ports_hbox_name.addLayout(self.ports_hbox)
 
-        # self.port_edit = QLineEdit()
-
-        # self.port_edit.editingFinished.connect(self.changePort)
-        # self.port_hbox.addWidget(self.port_edit)
+        # ComboBox if there is more than 5 ports
+        self.ports_cb = QComboBox()
 
         vbox.addLayout(ports_hbox_name)
 
@@ -204,24 +203,33 @@ class View(QWidget):
             del child
 
     def add_devices(self, dev_list):
-        print('Ports: {}'.format(dev_list))
-        self.remove_all_widgets(self.ports_hbox)
-        if not dev_list:
-            no_devs = QLabel('No ports found.')
-            self.ports_hbox.addWidget(no_devs)
+        # print('Ports: {}'.format(dev_list))
 
-            return None
+        # If number of devices is more than 5 use ComboBox
+        if len(dev_list) > 5:
+            self.ports_cb.clear()
+            for device in dev_list:
+                self.ports_cb.addItem(device.device)
 
-        for device in dev_list:
-            device_btn = QPushButton(device.device)
-            device_btn.clicked.connect(lambda: self.changePort(device_btn))
-            self.ports_hbox.addWidget(device_btn)
+            self.ports_hbox.addWidget(self.ports_cb)
+        else:
+            self.remove_all_widgets(self.ports_hbox)
+            if not dev_list:
+                no_devs = QLabel('No ports found.')
+                self.ports_hbox.addWidget(no_devs)
+
+                return None
+
+            for device in dev_list:
+                device_btn = QPushButton(device.device)
+                device_btn.clicked.connect(lambda: self.changePort(device_btn))
+                self.ports_hbox.addWidget(device_btn)
 
         self.update()
 
-    def show_error(self, value):
+    def show_error(self, text):
         msg = QMessageBox(
-                QMessageBox.NoIcon, 'Error occured.', value, QMessageBox.Ok)
+                QMessageBox.NoIcon, 'Error occured.', text, QMessageBox.Ok)
         msg.exec()
 
 #==============================================================================
@@ -278,6 +286,8 @@ class View(QWidget):
             try:
                 msg = self.queue.get(0)
 
+                if not self.stat_btn.status:
+                    self.stat_btn.status = 0
                 # self.editer.appendPlainText(msg)
                 self.appendText(msg)
                 if self.autoscroll:

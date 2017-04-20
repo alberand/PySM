@@ -92,13 +92,14 @@ class Model(threading.Thread, QObject):
                 rlist = select.select([self.ser], [], [], self.timeout)
                 if not rlist:
                     continue 
-                else:
+                elif self.paused.isSet():
                     try:
                         size = self.ser.inWaiting()
                         if size:
                             data = self.read(size)
                     except SerialException as e:
                         logger.error('Error occured while reading data. ' + str(e))
+                else:
                         sleep(0.05)
                         continue
 
