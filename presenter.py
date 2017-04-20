@@ -18,8 +18,7 @@ class Presenter:
         self.__view.send_data.connect(self.__model.write)
         self.__view.baudrate_changed.connect(
                 lambda x: setattr(self.__model, 'br', x))
-        self.__view.port_changed.connect(
-                lambda x: setattr(self.__model, 'port', x))
+        self.__view.port_changed.connect(self.port_changed)
         self.__view.eol_changed.connect(self.__model.set_eol)
 
         self.__view.pause_m.connect(self.__model.pause)
@@ -41,6 +40,10 @@ class Presenter:
         '''
         if not self.__model.paused.is_set():
             self.__model.resume()
+
+    def port_changed(self, port):
+        self.__model.port = port
+        self.__model.resume()
 
     def end_cmd(self):
         '''

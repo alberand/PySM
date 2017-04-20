@@ -169,7 +169,7 @@ class Model(threading.Thread, QObject):
         Stop thread.
         '''
         self.running = False
-        self.paused.set()
+        self.pause()
         if self.ser:
             self.ser.close()
 

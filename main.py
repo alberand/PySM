@@ -10,7 +10,6 @@ from PyQt5.QtWidgets import QApplication
 from    view        import View
 from    presenter   import Presenter
 
-
 if __name__ == '__main__':
     app         = QApplication(sys.argv)
     gui         = View()
