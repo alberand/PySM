@@ -254,10 +254,10 @@ class Model(threading.Thread, QObject):
         '''
         if self.ser.isOpen():
             try:
-                self.ser.write(bytes(data, self.config['encode']) + 
-                               bytes(self.get_eol(), self.config['encode']))
+                self.ser.write(bytes(data, config['encode']) + 
+                               bytes(self.get_eol(), config['encode']))
                 self.ser.flushOutput()
-            except SerialExceptin as e:
+            except SerialException as e:
                 logger.error(('Exception occured, while writing to serial port.'
                         '{}').format(e))
                 self.emit_error(3, 'Fail writing to port: {}'.format(
