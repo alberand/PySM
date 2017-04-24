@@ -67,7 +67,7 @@ class StatusButton(QWidget):
 
     @status.setter
     def status(self, status):
-        print('Status {}'.format(status))
+        # print('Status {}'.format(status))
         if not self.sigs:
             print('Can\'t change status before signals will be assigned.')
             return None
@@ -76,7 +76,7 @@ class StatusButton(QWidget):
             return None
 
         self._status = status
-        print('Chaging status to: {}.'.format(self._status))
+        # print('Chaging status to: {}.'.format(self._status))
         if status == 0:
             self._st_running()
         elif status == 1:

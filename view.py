@@ -286,7 +286,7 @@ class View(QWidget):
             try:
                 msg = self.queue.get(0)
 
-                if not self.stat_btn.status:
+                if self.stat_btn.status:
                     self.stat_btn.status = 0
                 # self.editer.appendPlainText(msg)
                 self.appendText(msg)
