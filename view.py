@@ -172,7 +172,9 @@ class View(QWidget):
         ports_hbox_name = QHBoxLayout()
         self.ports_hbox = QHBoxLayout()
         port_lbl = QLabel('Ports: ')
+        port_lbl.setStyleSheet('padding: 3px;')
         ports_hbox_name.addWidget(port_lbl)
+        ports_hbox_name.addSpacing(4)
         ports_hbox_name.addLayout(self.ports_hbox)
 
         # ComboBox if there is more than 5 ports
@@ -222,8 +224,11 @@ class View(QWidget):
 
             for device in dev_list:
                 device_btn = QPushButton(device.device)
+                device_btn.setStyleSheet('padding: 3px;')
                 device_btn.clicked.connect(lambda: self.changePort(device_btn))
                 self.ports_hbox.addWidget(device_btn)
+
+            self.ports_hbox.addStretch()
 
         self.update()
 
@@ -351,7 +356,6 @@ class View(QWidget):
 # Events
 #==============================================================================
     def ModScrollContentsBy(self, dx, dy):
-        # print('as: {}. dx: {}. dy: {}.'.format(self.autoscroll, dx, dy))
         for editor in [self.editer, self.editor_hex]:
             if self.autoscroll:
                 editor.ensureCursorVisible()
