@@ -81,13 +81,12 @@ class Model(threading.Thread, QObject):
             while self.running:
                 data = b''
 
-                if self.scan_ports():
-                    logger.info("Update port's list. Ports: {}.".format(
-                        self.current_ports))
 
                 self.paused.wait()
-                if not self.ser.isOpen():
-                    self.open_port()
+
+                # If we doesn't choose any port and want to close the program
+                # if not self.ser.isOpen():
+                   # self.open_port()
 
                 rlist = select.select([self.ser], [], [], self.timeout)
                 if not rlist:
@@ -99,6 +98,10 @@ class Model(threading.Thread, QObject):
                             data = self.read(size)
                     except SerialException as e:
                         logger.error('Error occured while reading data. ' + str(e))
+                    except OSError as e:
+                        logger.error('Can\'t read from serial port.')
+                        self.close_port()
+                        self.emit_error(2, 'Can\'t read from serial port.')
                 else:
                         sleep(0.05)
                         continue
@@ -145,11 +148,13 @@ class Model(threading.Thread, QObject):
         if self.ser:
             try:
                 self.ser.close()
+                self.ser.port = ''
             except SerialException as e:
                 self.emit_error(1, 'Can\'t close port: ' + str(port) + '.')
                 logger.debug('Fail to close port: {}'.format(e))
 
     def pause(self):
+        logger.debug('Pausing...')
         if self.ser.isOpen():
             self.close_port()
 
@@ -158,6 +163,7 @@ class Model(threading.Thread, QObject):
 
 
     def resume(self):
+        logger.debug('Resuming...')
         if not self.ser.isOpen():
             self.open_port()
 
@@ -168,8 +174,10 @@ class Model(threading.Thread, QObject):
         '''
         Stop thread.
         '''
+        logger.debug('Stopping...')
         self.running = False
-        self.pause()
+        if not self.paused.isSet():
+            self.paused.set()
         if self.ser:
             self.ser.close()
 
@@ -180,6 +188,7 @@ class Model(threading.Thread, QObject):
         Returns:
             True if update.
         '''
+        logger.debug('Scanning for ports...')
         found_ports = self.list_serial_ports()
         if found_ports != self.current_ports:
             self.current_ports = found_ports

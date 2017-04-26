@@ -4,6 +4,8 @@
 import serial as s
 
 config = {
+        # Port settings
+        #======================================================================
         # Default port
         'port': '/dev/ttyUSB0',
         # Baudrate
@@ -29,6 +31,9 @@ config = {
         # Number of stop bits (STOPBITS_ONE, STOPBITS_ONE_POINT_FIVE, 
         # STOPBITS_TWO)
         'stopbits': s.STOPBITS_ONE,
+        # Settings
+        #======================================================================
+        'scan_timeout': 3,
         # HEX console coloring
         'hex_colors': True,
         'hex_bytes_in_row': 16,

@@ -1,8 +1,15 @@
 #!/usr/bin/env python 
 # coding=utf-8
 
+import logging
+
+import PyQt5.QtCore
 
 from model import Model
+
+# Set up logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 class Presenter:
 
@@ -10,6 +17,12 @@ class Presenter:
 
         self.__model = Model()
         self.__view = view
+
+        # Periodically update ports list
+        # PyQt5.QtCore.QTimer.singleShot(10, self.scan_ports)
+        timer = PyQt5.QtCore.QTimer(self.__view)
+        timer.timeout.connect(self.scan_ports)
+        timer.start(1000)
 
         # Run communication and start thread
         self.__model.start()
@@ -34,12 +47,18 @@ class Presenter:
         #self.__view.set_port(self.__model.port)
         self.__view.update_gui()
 
+
     def start_model(self):
         '''
         Initalizate serial settings in model and start thread.
         '''
         if not self.__model.paused.is_set():
             self.__model.resume()
+
+    def scan_ports(self):
+        if self.__model.scan_ports():
+            logger.info("Update port's list. Ports: {}.".format(
+                self.__model.current_ports))
 
     def port_changed(self, port):
         self.__model.port = port
