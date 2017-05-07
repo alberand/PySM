@@ -18,6 +18,10 @@ python3 ./main.py
 
 ![Alt text](https://github.com/alberand/PySM/blob/master/stuff/screenshot.png?raw=true "PySM screenshot.")
 
+### Notes
+
+*Still in progress!* Doesn't work very well for now.
+
 ### TODO
  - Change GUI policy. For now it's not obvious how to use it. For example port
    change, start/stop
