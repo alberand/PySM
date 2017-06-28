@@ -86,26 +86,26 @@ class Model(threading.Thread, QObject):
                     break
 
                 # If we doesn't choose any port and want to close the program
-                # if not self.ser.isOpen():
-                   # self.open_port()
+                if not self.ser.isOpen():
+                    if not self.open_port():
+                        self.pause()
+                        continue
 
-                try:
-                    rlist = select.select([self.ser], [], [], self.timeout)
-                    if not rlist:
-                        continue 
-
-                    size = self.ser.inWaiting()
-                    if size:
+                select.select([self.ser], [], [], 0.005)
+                size = self.ser.in_waiting
+                if size:
+                    try:
                         data = self.read(size)
-                except SerialException as e:
-                    logger.error('Error occured while reading data. ' + str(e))
-                    self.pause()
-                except (OSError, TypeError) as e:
-                    logger.error('Can\'t read from serial port.')
-                    self.close_port()
-                    self.pause()
-                    self.emit_error(2, 'Can\'t read from serial port.')
-
+                    except SerialException as e:
+                        logger.error('Error occured while reading data. ' + str(e))
+                        self.pause()
+                    except (OSError, TypeError) as e:
+                        logger.error('Can\'t read from serial port.')
+                        self.close_port()
+                        self.emit_error(2, 'Can\'t read from serial port.')
+                else:
+                    # sleep(0.005)
+                    continue
 
                 if data:
                     decoded = ''
@@ -129,13 +129,19 @@ class Model(threading.Thread, QObject):
                     # print(hex_repr)
                     result = [decoded, hex_repr]
 
+                    print(decoded, end='')
                     self.queue.put(result)
         except KeyboardInterrupt:
             if self.ser:
                 self.ser.close()
             exit()
+        self.terminate()
 
     def open_port(self):
+        if not self.ser.port:
+            self.emit_error(0, 'Port is not set.')
+            return False
+
         if self.ser:
             logger.debug('Opening port {}.'.format(self._port))
             try:
@@ -144,6 +150,9 @@ class Model(threading.Thread, QObject):
             except SerialException as e:
                 self.emit_error(0, 'Can\'t open port: ' + str(self._port) + '.')
                 logger.debug('Fail to open port: {}'.format(e))
+                return False
+
+        return True
 
     def close_port(self):
         if self.ser:
@@ -155,20 +164,24 @@ class Model(threading.Thread, QObject):
 
     def pause(self):
         logger.debug('Pausing...')
-        if self.ser.isOpen():
-            self.close_port()
-
         if self.paused.isSet():
             self.paused.clear()
 
-
     def resume(self):
         logger.debug('Resuming...')
-        if not self.ser.isOpen():
-            self.open_port()
-
         if not self.paused.isSet():
             self.paused.set()
+
+    def start_reading(self):
+        logger.debug('Start reading...')
+        if self.ser.isOpen():
+            self.ser.close()
+
+        if not self.open_port():
+            self.pause()
+            return
+        else:
+            self.resume()
 
     def stop(self):
         '''
@@ -176,8 +189,11 @@ class Model(threading.Thread, QObject):
         '''
         logger.debug('Stopping...')
         self.running = False
+
         if not self.paused.isSet():
             self.paused.set()
+
+    def terminate(self):
         if self.ser:
             self.ser.close()
 
@@ -218,7 +234,7 @@ class Model(threading.Thread, QObject):
         data = None
 
         if self.ser.isOpen():
-            logger.debug('Size to read: {}.'.format(size))
+            # logger.debug('Size to read: {}.'.format(size))
             try:
                 data = self.ser.read(size)
                 self.ser.flushInput()
@@ -294,8 +310,8 @@ class Model(threading.Thread, QObject):
     def port(self):
         return self._port
 
-    @port.setter
-    def port(self, port):
+    # @port.setter
+    def set_port(self, port):
         logger.debug('Set new port: {}.'.format(port))
         if self.ser and self.ser.isOpen():
             self.close_port()

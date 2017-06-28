@@ -61,8 +61,8 @@ class Presenter:
                 self.__model.current_ports))
 
     def port_changed(self, port):
-        self.__model.port = port
-        self.__model.resume()
+        self.__model.set_port(port)
+        self.__model.start_reading()
 
     def end_cmd(self):
         '''

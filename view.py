@@ -341,6 +341,7 @@ class View(QWidget):
         self.eol_changed.emit(value)
 
     def emit_port_changed(self, port_name):
+        print('Port Change')
         self.port_changed.emit(port_name)
 
     def emit_pause_m(self):
