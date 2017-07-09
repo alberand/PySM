@@ -19,10 +19,6 @@ config = {
             '\r',
             '\r\n'
         ],
-        # Data encoding (hex, none)
-        'in_hex': False,
-        # Decoding 'ASCII' or 'UTF-8'
-        'encode': 'ASCII',
         # Parity (PARITY_NONE, PARITY_EVEN, PARITY_ODD PARITY_MARK, 
         # PARITY_SPACE)
         'parity': s.PARITY_NONE,
@@ -31,6 +27,7 @@ config = {
         # Number of stop bits (STOPBITS_ONE, STOPBITS_ONE_POINT_FIVE, 
         # STOPBITS_TWO)
         'stopbits': s.STOPBITS_ONE,
+
         # Settings
         #======================================================================
         'scan_timeout': 3,

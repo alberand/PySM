@@ -109,24 +109,17 @@ class Model(threading.Thread, QObject):
 
                 if data:
                     decoded = ''
-                    if config['in_hex']:
-                        # Only for Python 3.5 and newer
-                        decoded = data.hex().upper()
-                    else:
-                        if config['encode'].upper() in ['ASCII', 'UTF-8']:
-                            try:
-                                decoded = data.decode(config['encode'])
-                            except UnicodeError as e:
-                                logger.warn('Fail to decode bytes. Error: {}'.format(
-                                    e))
-                        else:
-                            logger.error('Wrong decoding format. Using ASCII.')
-                            decoded = data.decode('ASCII')
+                    try:
+                        decoded = data.decode('ASCII')
+                    except UnicodeError as e:
+                        logger.warn('Fail to decode bytes. Error: {}'.format(
+                            e))
+                        continue
 
                     # One not formated and formated string for hex
                     # representation
                     hex_repr = self.add_html_colors(decoded)
-                    # print(hex_repr)
+
                     result = [decoded, hex_repr]
 
                     print(decoded, end='')
@@ -330,7 +323,7 @@ class Model(threading.Thread, QObject):
             self.eol = config['eol'][index]
         else:
             logger.error('Can\t set up this type of End Of Line. Because it\'s '
-                    'not instandart list.')
+                    'not in standart list.')
 
     def get_eol(self):
         return self.eol
