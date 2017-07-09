@@ -73,6 +73,7 @@ class View(QWidget):
         self.menubar = QMenuBar()
         file_menu = self.menubar.addMenu('File')
         file_menu.addAction('Save', self.save_to_file)
+        file_menu.addAction('Quit', self.close)
         vbox.addWidget(self.menubar)
 
         # Command box
@@ -208,7 +209,8 @@ class View(QWidget):
         # print('Ports: {}'.format(dev_list))
 
         # If number of devices is more than 5 use ComboBox
-        if len(dev_list) > 5:
+        # TODO
+        if len(dev_list) > 5 and False:
             self.ports_cb.clear()
             for device in dev_list:
                 self.ports_cb.addItem(device.device)
@@ -278,7 +280,7 @@ class View(QWidget):
 
     def appendText(self, data):
         pos = QPoint(self.editer.textCursor().position(), 0)
-        self.editer.moveCursor(QTextCursor.End)
+        # self.editer.moveCursor(QTextCursor.End)
         self.editer.insertPlainText(data[0])
         # self.editer.appendHtml(data[0])
         self.editer.cursorForPosition(pos)

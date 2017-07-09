@@ -63,6 +63,7 @@ class Presenter:
     def port_changed(self, port):
         self.__model.set_port(port)
         self.__model.start_reading()
+        self.__view.update_status_bar(self.__model.port_config())
 
     def end_cmd(self):
         '''
